@@ -12,28 +12,10 @@ const { CRYPTO_TRACKER_URL } = require("../config/config");
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
-  const user = req.user;
-  const { inviteReferralCode } = req.body;
-
-  let referralCode = referralCodeGenerator.alphaNumeric("uppercase", 2, 4);
-
-  let invitedBy;
-  let referrerUser = await User.findOne({ referralCode: inviteReferralCode });
-  if (referrerUser) {
-    invitedBy = referrerUser._id;
-  }
-
-  let currentUser = await User.findByIdAndUpdate(user._id, {
-    invitedBy: invitedBy,
-    referralCode: referralCode,
-    userIdCardImage: req.body.userIdCardImage,
-    userIdCardNumber: req.body.userIdCardNumber,
-  });
-
   res.status(200).json({
     status: true,
     message: "User onboarded.",
-    user: currentUser,
+    user: req.user,
   });
 });
 

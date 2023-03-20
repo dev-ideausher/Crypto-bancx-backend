@@ -25,24 +25,18 @@ const userSchema = new mongoose.Schema(
     //   default: "user",
     // },
 
-    password:{
+    firebaseUid: {
       type: String,
-      
-    }
-    ,
-  
-    // firebaseUid: {
-    //   type: String,
-    //   required: true,
-    //   unique: true,
-    // },
-    // firebaseSignInProvider: {
-    //   type: String,
-    //   required: true,
-    // },
-    // invitedBy: {
-    //   type: String,
-    // },
+      required: true,
+      unique: true,
+    },
+    firebaseSignInProvider: {
+      type: String,
+      required: true,
+    },
+    invitedBy: {
+      type: String,
+    },
     referralCode: {
       type: String,
     },
@@ -52,7 +46,7 @@ const userSchema = new mongoose.Schema(
     userIdCardNumber: {
       type: String,
     },
- 
+
     isDeleted: {
       // to soft delete user. if(isDeleted = true), then user is deleted.
       type: Boolean,
@@ -68,4 +62,4 @@ userSchema.pre(/^find/, function (next) {
 });
 
 const userModel = mongoose.model("User", userSchema, "User");
-module.exports = userModel
+module.exports = userModel;

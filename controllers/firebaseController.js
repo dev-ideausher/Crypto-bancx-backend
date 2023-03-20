@@ -1,14 +1,10 @@
 const admin = require("firebase-admin");
-const serviceAccount = require("../firebase/firebase-service-secret.json");
+const serviceAccount = require("../firebase/serviceAccountKey.json");
 const AppError = require("../utils/appError");
 const User = require("../models/userModel");
-const Notification = require("../models/notificationModel");
+// const Notification = require("../models/notificationModel");
 const { getAuth, signInWithCustomToken } = require("firebase/auth");
 require("../firebase/firebaseConfig");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 const requiresAuth = async (req, res, next) => {
   const idToken = req.header("token");
@@ -32,9 +28,7 @@ const requiresAuth = async (req, res, next) => {
           firebaseSignInProvider: decodedIdToken.firebase.sign_in_provider,
           name: req.body.name,
           email: req.body.email,
-          dob: req.body.dob,
           image: req.body.image,
-          userType: req.body.userType,
         });
       } else {
         user = await User.create({

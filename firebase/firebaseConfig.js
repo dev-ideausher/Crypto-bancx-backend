@@ -1,21 +1,21 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+require("firebase/auth");
+const { initializeApp } = require("firebase/app");
+const admin = require('firebase-admin')
+const serviceAccount = require("./serviceAccountKey.json");
+const env = require("../config/config");
 const firebaseConfig = {
-  apiKey: "AIzaSyBryp7QkWdMUTkhbAboUDCOWurwFu8u15k",
-  authDomain: "blockhole-9ba38.firebaseapp.com",
-  projectId: "blockhole-9ba38",
-  storageBucket: "blockhole-9ba38.appspot.com",
-  messagingSenderId: "634936675448",
-  appId: "1:634936675448:web:d941504b244925d4df318d",
-  measurementId: "G-BK7KZ7JNNW"
+  apiKey: env.FIREBASE_API_KEY,
+  authDomain: env.FIREBASE_AUTH_DOMAIN,
+//   databaseURL: env.FIREBASE_DATABASE_URL,
+  projectId: env.FIREBASE_PROJECT_ID,
+  storageBucket: env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: env.FIREBASE_APP_ID,
+  measurementId: env.FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+initializeApp(firebaseConfig);
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    // databaseURL: process.env.FIREBASE_DATABASE_URL
+});

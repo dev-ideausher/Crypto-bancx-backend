@@ -6,6 +6,7 @@ const viewsModel = require("../models/viewsModel");
 const tagModel = require("../models/tagModel");
 const favoriteModel = require("../models/favoriteModel");
 const redis = require("redis");
+const redisClient = require("../config/redis");
 
 const EXPIRY_TIME = 3600;
 // add content
@@ -163,7 +164,6 @@ exports.addTag = catchAsync(async (req, res, next) => {
 
 // get latest news
 exports.latestContent = catchAsync(async (req, res, next) => {
-  const redisClient = redis.createClient();
 
   const { page, type, pageSize, contentId } = req.query;
   if (contentId) {
@@ -220,7 +220,6 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 
 // search
 exports.search = catchAsync(async (req, res, next) => {
-  const redisClient = redis.createClient();
   const { query, type } = req.query;
   const resultExists = await redisClient.get(
     `search?query=${query}&type=${type}`
@@ -253,7 +252,6 @@ exports.search = catchAsync(async (req, res, next) => {
 
 // trending content
 exports.trending = catchAsync(async (req, res, next) => {
-  const redisClient = redis.createClient();
   const { type, pageNo, pageSize } = req.query;
   const resultExists = await redisClient.get(
     `trending?pageNo=${pageNo}&type=${type}&pageSize=${pageSize}`

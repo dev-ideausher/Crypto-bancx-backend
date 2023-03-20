@@ -1,4 +1,4 @@
 node_modules
 .env
-firebase-service-secret.json
+serviceAccountKey.json
 firebase-web-sdk.js

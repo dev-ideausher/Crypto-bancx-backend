@@ -1,8 +1,8 @@
-// const {requiresAuth,restrictTo,generateToken} = require("../controllers/firebaseController");
+const { requiresAuth } = require("../controllers/firebaseController");
 const userController = require("../controllers/userController");
 const router = require("express").Router()
 
-// router.post("/onboarding",requiresAuth,userController.userOnboarding);
+router.post("/onboarding",requiresAuth,userController.userOnboarding);
 // router.post("/login",requiresAuth,userController.login);
 router.post("/add",userController.addUser);
 router.post("/add-comment",userController.addComment);
