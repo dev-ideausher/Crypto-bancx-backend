@@ -10,59 +10,46 @@ const schema = new mongoose.Schema(
       type: String,
       maxLength: [300, "Title should be less than 301 characters."],
       trim: true,
-      required: [true, "Provide title of the news"],
-    },
-    description: {
-      type: String,
-      trim: true,
-      maxLength: [500, "description should be less than 301 characters."],
+      default: null,
     },
 
-    content: {
+    url: {
       type: String,
-      required: [true, "Provide  news to add"],
+      required: [true, "Provide  url of the video"],
       trim: true,
     },
     author: {
       type: mongoose.Types.ObjectId,
       required: [true, "Provide author of the news"],
-      refPath: "onModel",
+      //   refPath: "onModel",
+      ref: "Admin",
     },
 
     thumbnail: {
       type: String,
-      required: true,
+      default: null,
     },
-    onModel: {
-      type: String,
-      enum: ["User", "Admin"],
-      // required: [true, "Provide user/admin model for blog"],
-    },
-    type: {
-      type: String,
-      enum: ["blog", "news"],
-      required: [true, "Provide type of content"],
-    },
+    // onModel: {
+    //   type: String,
+    //   enum: ["User", "Admin"],
+    //   // required: [true, "Provide user/admin model for blog"],
+    // },
+
     ViewCount: {
       type: Number,
       default: 0,
     },
-    tags: {
-      type: [mongoose.Types.ObjectId],
-      ref: "Tag",
-      validate: [tagSizeLimit, "tags should be unique and less than 5"],
-    },
+    // tags: {
+    //   type: [mongoose.Types.ObjectId],
+    //   ref: "Tag",
+    //   validate: [tagSizeLimit, "tags should be unique and less than 5"],
+    // },
     isApproved: {
       type: Boolean,
     },
     isActive: {
       type: Boolean,
       default: true,
-    },
-    isDeleted: {
-      // to soft delete user. if(isDeleted = true), then user is deleted.
-      type: Boolean,
-      default: false,
     },
   },
   { timestamps: true }
@@ -74,20 +61,16 @@ function tagSizeLimit(val) {
   return true;
 }
 
-schema.pre(/^find/, function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
 schema.pre("save", async function (next) {
   let check;
-  if (await userModel.findById(this.author)) {
+  //   if (await userModel.findById(this.author)) {
+  //     check = true;
+  //     this.onModel = "User";
+  //     this.isApproved = false;
+  //   } else
+  if (await adminModel.findById(this.author)) {
     check = true;
-    this.onModel = "User";
-    this.isApproved = false;
-  } else if (await adminModel.findById(this.author)) {
-    check = true;
-    this.onModel = "Admin";
+    // this.onModel = "Admin";
     this.isApproved = true;
   }
   if (!check) {
@@ -103,14 +86,14 @@ schema.pre("save", async function (next) {
   //   return next(new AppError("Author should either be admin or user"));
   // }
 
-  for (let i = 0; i < this.tags.length; i++) {
-    const isTagValid = await tagModel.findById(this.tags[i]);
-    if (!isTagValid) {
-      return next(new AppError("Invalid tag", 404));
-    }
-  }
+  //   for (let i = 0; i < this.tags.length; i++) {
+  //     const isTagValid = await tagModel.findById(this.tags[i]);
+  //     if (!isTagValid) {
+  //       return next(new AppError("Invalid tag", 404));
+  //     }
+  //   }
   next();
 });
-const contentModel = mongoose.model("Content", schema, "Content");
+const videoModel = mongoose.model("Video", schema, "Video");
 
-module.exports = contentModel;
+module.exports = videoModel;

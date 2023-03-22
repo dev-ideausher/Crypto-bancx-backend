@@ -72,5 +72,45 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.changeCommentStatus
 );
+router.get(
+  "/search-blog",
+  authController.validateToken(adminModel),
+  adminController.searchBlogs
+);
+router.get(
+  "/content",
+  authController.validateToken(adminModel),
+  adminController.getNewsOrBlogs
+);
+router.get(
+  "/videos",
+  authController.validateToken(adminModel),
+  adminController.getVideos
+);
+router.get(
+  "/search-news",
+  authController.validateToken(adminModel),
+  adminController.searchNews
+);
+router.get(
+  "/search-video",
+  authController.validateToken(adminModel),
+  adminController.searchVideos
+);
+router.get(
+  "/search-blog",
+  authController.validateToken(adminModel),
+  adminController.searchBlogs
+);
+router.patch(
+  "/change-content-status",
+  authController.validateToken(adminModel),
+  adminController.changeContentStatus
+);
+router.patch(
+  "/change-video-status",
+  authController.validateToken(adminModel),
+  adminController.changeVideoStatus
+);
 
 module.exports = router;

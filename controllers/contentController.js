@@ -164,7 +164,6 @@ exports.addTag = catchAsync(async (req, res, next) => {
 
 // get latest news
 exports.latestContent = catchAsync(async (req, res, next) => {
-
   const { page, type, pageSize, contentId } = req.query;
   if (contentId) {
     const dataExists = await redisClient.get(`latest?contentId=${contentId}`);
@@ -182,22 +181,25 @@ exports.latestContent = catchAsync(async (req, res, next) => {
       EXPIRY_TIME,
       JSON.stringify(content?._doc)
     );
-    await redisClient.quit();
+    //await redisClient.quit();
 
     return res
       .status(200)
       .json({ status: true, message: "Content found", content: content });
   }
-  if (page < 0 || pageSize <= 0)
+  
+  if (page < 1 || pageSize <= 0)
     return next(new AppError("Invalid page number or page size", 403));
-
+  if (!redisClient.isOpen) {
+    return next(new AppError("Something is wrong", 500));
+  }
   const dataExists = await redisClient.get(
     `latest?page=${page}&pageSize=${pageSize}`
   );
   if (dataExists) {
     return res.status(200).json({
       status: true,
-      message: "Data found",
+      message: "Data found redis",
       content: JSON.parse(dataExists),
     });
   }
@@ -207,15 +209,17 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     .skip(pageSize * (page - 1))
     .limit(pageSize);
 
+  const total = (await contentModel.find()).length;
+
   await redisClient.SETEX(
     `latest?page=${page}&pageSize=${pageSize}`,
     EXPIRY_TIME,
     JSON.stringify(content)
   );
-  await redisClient.quit();
+  //await redisClient.quit();
   return res
     .status(200)
-    .json({ status: true, message: "Content", content: content });
+    .json({ status: true, message: "Content", content: content, total: total });
 });
 
 // search
@@ -225,7 +229,7 @@ exports.search = catchAsync(async (req, res, next) => {
     `search?query=${query}&type=${type}`
   );
   if (resultExists) {
-    await redisClient.quit();
+    //await redisClient.quit();
     return res.status(200).json({
       status: true,
       message: "Result found",
@@ -244,7 +248,7 @@ exports.search = catchAsync(async (req, res, next) => {
     EXPIRY_TIME,
     JSON.stringify(searchResult)
   );
-  await redisClient.quit();
+  //await redisClient.quit();
   return res
     .status(200)
     .json({ status: 200, message: "", searchResult: searchResult });
@@ -257,7 +261,7 @@ exports.trending = catchAsync(async (req, res, next) => {
     `trending?pageNo=${pageNo}&type=${type}&pageSize=${pageSize}`
   );
   if (resultExists) {
-    await redisClient.quit();
+    //await redisClient.quit();
     return res.status(200).json({
       status: true,
       message: "Result found",
@@ -288,7 +292,7 @@ exports.trending = catchAsync(async (req, res, next) => {
     EXPIRY_TIME,
     JSON.stringify(all)
   );
-  await redisClient.quit();
+  //await redisClient.quit();
   return res
     .status(200)
     .json({ status: true, message: `Trending ${type} found`, result: all });

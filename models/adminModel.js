@@ -23,7 +23,7 @@ const schema = new mongoose.Schema({
     enum: ["admin", "subAdmin"],
     default: "subAdmin",
   },
-  active: {
+  isActive: {
     type: Boolean,
     default: true,
   },

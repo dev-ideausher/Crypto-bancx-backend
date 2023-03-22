@@ -20,7 +20,7 @@ const requiresAuth = async (req, res, next) => {
   }
   let user = await User.findOne({ firebaseUid: decodedIdToken.uid });
   if (!user) {
-    if (req.baseUrl + req.path === "/user/onboarding") {
+    if (req.path === "/onboarding") {
       if (decodedIdToken.firebase.sign_in_provider === "phone") {
         user = await User.create({
           phone: decodedIdToken.phone_number,

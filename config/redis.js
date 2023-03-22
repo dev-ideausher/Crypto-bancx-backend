@@ -8,4 +8,14 @@ const redisClient = redis.createClient({
   },
 });
 
+redisClient
+  .connect()
+  .then((a) => {
+    console.log("a", a);
+  })
+  .catch((error) => {
+    console.log({ error });
+  });
+
+
 module.exports = redisClient;

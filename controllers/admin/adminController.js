@@ -2,10 +2,19 @@ const adminModel = require("../../models/adminModel");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcryptjs");
 const AppError = require("../../utils/appError");
-const { generateJWTToken } = require("../../utils/helper");
+const {
+  generateJWTToken,
+  isDate,
+  disableFunction,
+  searchNewsOrVideos,
+  getData,
+} = require("../../utils/helper");
 const aboutUsModel = require("../../models/aboutUs");
 const employeeModel = require("../../models/employeeModel");
 const commentModel = require("../../models/commentModel");
+const contentModel = require("../../models/contentModel");
+const userModel = require("../../models/userModel");
+const videoModel = require("../../models/videoModel");
 
 // admin register
 exports.register = catchAsync(async (req, res, next) => {
@@ -170,7 +179,7 @@ exports.changeAdminStatus = catchAsync(async (req, res, next) => {
     { _id: adminId },
     {
       $set: {
-        active: isAdminExists.active ? false : true,
+        isActive: isAdminExists.active ? false : true,
       },
     }
   );
@@ -285,7 +294,7 @@ exports.getEmployees = catchAsync(async (req, res, next) => {
 exports.getComments = catchAsync(async (req, res, next) => {
   const { isApproved } = req.query;
   let filter = {};
-  if (isApproved) filter.isApproved = isApproved;
+  if (isApproved !== undefined) filter.isApproved = isApproved;
   const allComments = await commentModel.find(filter).populate("itemId");
   return res
     .status(200)
@@ -317,3 +326,72 @@ exports.changeCommentStatus = catchAsync(async (req, res, next) => {
     comment: updateComment,
   });
 });
+
+exports.searchNews = searchNewsOrVideos(contentModel);
+exports.searchVideos = searchNewsOrVideos(videoModel);
+exports.changeContentStatus = disableFunction(contentModel);
+exports.changeVideoStatus = disableFunction(videoModel);
+
+exports.searchBlogs = catchAsync(async (req, res, next) => {
+  const { query, type } = req.query;
+  const data = await contentModel.aggregate([
+    { $match: { type } },
+    {
+      $lookup: {
+        from: "User",
+        localField: "author",
+        foreignField: "_id",
+        as: "authors",
+      },
+    },
+    {
+      $lookup: {
+        from: "Admin",
+        localField: "author",
+        foreignField: "_id",
+        as: "admins",
+      },
+    },
+    { $unwind: { path: "$authors", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$admins", preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+          { "authors.name": { $regex: query, $options: "i" } },
+          { "authors.email": { $regex: query, $options: "i" } },
+          { "admins.name": { $regex: query, $options: "i" } },
+          { "admins.email": { $regex: query, $options: "i" } },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        data: { $push: "$$ROOT" },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        data: 1,
+        count: 1,
+      },
+    },
+  ]);
+
+  const result = data.length ? data[0] : { data: [], count: 0 };
+  res.status(200).json({
+    status: "success",
+    data: result.data,
+    count: result.count,
+  });
+});
+
+// get all blogs or news
+exports.getNewsOrBlogs = getData(contentModel);
+
+// get videos
+exports.getVideos = getData(videoModel);
