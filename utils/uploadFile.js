@@ -5,7 +5,7 @@ const router = require("express").Router();
 const s3 = new AWS.S3({
   accessKeyId: AWS_ACCESS_KEY,
   secretAccessKey: AWS_SECRET_KEY,
-  region: "ap-south-1",
+  region: "us-east-2",
 });
 
 const uploadFile = (filename, bucketname, file, ContentType) => {
@@ -49,7 +49,7 @@ router.post(
     const fileName = req.file.originalname;
     const link = await uploadFile(
       fileName,
-      "blockhole",
+      "cryptobancx",
       file,
       req.file.mimetype
     );
