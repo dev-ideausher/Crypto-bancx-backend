@@ -46,7 +46,10 @@ const userSchema = new mongoose.Schema(
     userIdCardNumber: {
       type: String,
     },
-
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     isDeleted: {
       // to soft delete user. if(isDeleted = true), then user is deleted.
       type: Boolean,

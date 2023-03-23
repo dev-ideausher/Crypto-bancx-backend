@@ -112,5 +112,25 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.changeVideoStatus
 );
+router.post(
+  "/add-user",
+  authController.validateToken(adminModel),
+  adminController.createNewUser
+);
+router.get(
+  "/all-users",
+  authController.validateToken(adminModel),
+  adminController.getAllUsers
+);
+router.get(
+  "/single-user",
+  authController.validateToken(adminModel),
+  adminController.getSingleUser
+);
+router.patch(
+  "/change-user-status",
+  authController.validateToken(adminModel),
+  adminController.disableUser
+);
 
 module.exports = router;

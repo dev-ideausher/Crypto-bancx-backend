@@ -8,6 +8,7 @@ const {
   disableFunction,
   searchNewsOrVideos,
   getData,
+  generateDate,
 } = require("../../utils/helper");
 const aboutUsModel = require("../../models/aboutUs");
 const employeeModel = require("../../models/employeeModel");
@@ -15,6 +16,8 @@ const commentModel = require("../../models/commentModel");
 const contentModel = require("../../models/contentModel");
 const userModel = require("../../models/userModel");
 const videoModel = require("../../models/videoModel");
+const firebase = require("firebase-admin");
+require("../../firebase/firebaseConfig");
 
 // admin register
 exports.register = catchAsync(async (req, res, next) => {
@@ -395,3 +398,79 @@ exports.getNewsOrBlogs = getData(contentModel);
 
 // get videos
 exports.getVideos = getData(videoModel);
+
+// create user
+exports.createNewUser = catchAsync(async (req, res, next) => {
+  const { email, password, name } = req.body;
+  const user = await firebase.auth().createUser({
+    email: email,
+    password,
+    displayName: name,
+  });
+  if (!user) {
+    return next(new AppError("Unable to create user", 500));
+  }
+  const verifyEmail = await firebase
+    .auth()
+    .updateUser(user.uid, { emailVerified: true });
+  if (!verifyEmail) {
+    return next(new AppError("Unable to verify email"));
+  }
+  const saveUserInDB = await userModel.create({
+    ...req.body,
+    firebaseUid: user.uid,
+    firebaseSignInProvider: user.providerData,
+  });
+  if (!saveUserInDB) {
+    return next(new AppError("Unable to save user", 500));
+  }
+  return res
+    .status(200)
+    .json({ status: true, message: "User has been created.." });
+});
+
+// get all users
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await userModel.find({});
+  const posts = await Promise.all(
+    users.map(
+      async (user) =>
+        await contentModel.find({ type: "blog", author: user._id })
+    ).length
+  );
+  users.forEach((user, idx) => {
+    users[idx] = { ...user._doc, totalPosts: posts[idx] };
+  });
+  return res.status(200).json({ status: true, message: "", allUsers: users });
+});
+
+// get single user
+exports.getSingleUser = catchAsync(async (req, res, next) => {
+  const { _id, duration, query } = req.query;
+  const { status, firstDay, lastDay } = generateDate(duration);
+  if (!status) {
+    return next(new AppError("Invalid duration", 500));
+  }
+  const filter = {
+    type: "blog",
+    author: _id,
+    createdAt: { $gte: firstDay, $lt: lastDay },
+  };
+  if (query) {
+    filter["$or"] = [
+      { title: { $regex: query, $options: "i" } },
+      { description: { $regex: query, $options: "i" } },
+      { content: { $regex: query, $options: "i" } },
+    ];
+  }
+  const [user, blogs] = await Promise.all([
+    userModel.findById(_id),
+    contentModel.find(filter).populate("author", "name image email"),
+  ]);
+  return res
+    .status(200)
+    .json({ status: true, message: "", user: user, blogs: blogs });
+});
+
+// disable user
+exports.disableUser = disableFunction(userModel);

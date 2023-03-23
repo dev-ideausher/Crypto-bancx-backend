@@ -104,9 +104,22 @@ const generateDate = (duration) => {
   return { firstDay, lastDay, status: true };
 };
 
-const getData = (model) => {
+const getData = (
+  model,
+  populateFieldKey = "author",
+  populateFieldValue = "name email image"
+) => {
   return catchAsync(async (req, res, next) => {
-    const { type, status, duration } = req.query;
+    const { type, status, duration, _id } = req.query;
+    if (_id) {
+      const singleData = await model.findById(_id);
+      if (!singleData) {
+        return next(new AppError("Invalid Id", 403));
+      }
+      return res
+        .status(200)
+        .json({ status: true, message: "", data: singleData });
+    }
     const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
     if (!isSuccess) {
       return next(new AppError("Invalid duration", 500));
@@ -126,7 +139,7 @@ const getData = (model) => {
 
     const data = await model
       .find(filter)
-      .populate("author", "name image email");
+      .populate(populateFieldKey, populateFieldValue);
     return res.status(200).json({ status: true, data: data });
   });
 };
