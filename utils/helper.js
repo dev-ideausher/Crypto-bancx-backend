@@ -144,6 +144,41 @@ const getData = (
   });
 };
 
+// change order
+const changeOrder = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const { type, orderArray } = req.body;
+    const data = await Promise.all(
+      orderArray.map((single) =>
+        model.findOneAndUpdate(
+          { type, contentId: single._id },
+          { $set: { priority: single.priority } }
+        )
+      )
+    );
+    return res
+      .status(200)
+      .json({ status: true, message: "Order has been updated successfully." });
+  });
+};
+
+// set top blog or news or video
+const setTop = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const { type, _id } = req.body;
+    const update = await model.findOneAndUpdate(
+      { type, _id },
+      { $set: { priority: 1 } },
+      { new: true }
+    );
+    if (!update) {
+      return next(new AppError("Internal Server Error.", 500));
+    }
+    return res
+      .status(200)
+      .json({ status: true, message: "Priority has been updated." });
+  });
+};
 module.exports = {
   searchQuery,
   generateJWTToken,
@@ -152,4 +187,6 @@ module.exports = {
   searchNewsOrVideos,
   getData,
   generateDate,
+  changeOrder,
+  setTop,
 };

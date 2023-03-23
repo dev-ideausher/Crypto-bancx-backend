@@ -132,5 +132,15 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.disableUser
 );
+router.patch(
+  "/change-content-order",
+  authController.validateToken(adminModel),
+  adminController.changeOrder
+);
+router.patch(
+  "/save-top",
+  authController.validateToken(adminModel),
+  adminController.saveTopContent
+);
 
 module.exports = router;

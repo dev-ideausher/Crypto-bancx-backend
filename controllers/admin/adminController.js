@@ -9,6 +9,8 @@ const {
   searchNewsOrVideos,
   getData,
   generateDate,
+  changeOrder,
+  setTop,
 } = require("../../utils/helper");
 const aboutUsModel = require("../../models/aboutUs");
 const employeeModel = require("../../models/employeeModel");
@@ -17,6 +19,7 @@ const contentModel = require("../../models/contentModel");
 const userModel = require("../../models/userModel");
 const videoModel = require("../../models/videoModel");
 const firebase = require("firebase-admin");
+const topContentModel = require("../../models/topContentModel");
 require("../../firebase/firebaseConfig");
 
 // admin register
@@ -474,3 +477,9 @@ exports.getSingleUser = catchAsync(async (req, res, next) => {
 
 // disable user
 exports.disableUser = disableFunction(userModel);
+
+// change order
+exports.changeOrder = changeOrder(topContentModel);
+
+// save as top content
+exports.saveTopContent = setTop(topContentModel);
