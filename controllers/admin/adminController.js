@@ -146,6 +146,15 @@ exports.getAllAdmins = catchAsync(async (req, res, next) => {
   });
 });
 
+// get single super admin info
+exports.getSingleAdmin = catchAsync(async (req, res, next) => {
+  const admin = await adminModel.findById(req.user._id);
+  if (!admin) {
+    return next(new AppError("Invalid user", 500));
+  }
+  return res.status(200).json({ status: true, message: "", admin: admin });
+});
+
 // edit admin
 exports.editAdmin = catchAsync(async (req, res, next) => {
   const { name, email, image } = req.body;

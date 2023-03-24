@@ -56,6 +56,11 @@ router.get(
   authController.validateToken(adminModel),
   adminController.getAllAdmins
 );
+router.get(
+  "/single",
+  authController.validateToken(adminModel),
+  adminController.getSingleAdmin
+);
 router.get("/about-us", adminController.getAboutUs);
 router.get(
   "/all-employee",
