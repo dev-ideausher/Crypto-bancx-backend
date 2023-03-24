@@ -72,6 +72,10 @@ const searchNewsOrVideos = (model) => {
     if (status && status !== "all") {
       filter.isActive = status;
     }
+    filter.createdAt = {
+      gte: firstDay,
+      lt: lastDay,
+    };
     if (isDate(query)) {
       let date = new Date(query);
       filter["$or"] = [{ createdAt: date }];
