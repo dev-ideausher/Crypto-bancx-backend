@@ -347,71 +347,103 @@ exports.searchVideos = searchNewsOrVideos(videoModel);
 exports.changeContentStatus = disableFunction(contentModel);
 exports.changeVideoStatus = disableFunction(videoModel);
 
+// search blog function, its working.
+// exports.searchBlogs = catchAsync(async (req, res, next) => {
+//   const { query, type, status, duration } = req.query;
+//   const filter = { $and: [{ type : "blog"}] };
+//   if (status && status !== "all") {
+//     filter["$and"] = [...filter["$and"], { isActive: status }];
+//   }
+//   const { status: isValidDuration, firstDay, lastDay } = generateDate(duration);
+//   if (!isValidDuration) {
+//     return next(new AppError("Invalid Duration", 500));
+//   }
+//   filter["$and"].push(
+//     ...[{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }]
+//   );
+
+//   console.log({ firstDay });
+//   console.log({ lastDay });
+//   console.log({ filter });
+//   const data = await contentModel.aggregate([
+//     { $match: filter },
+//     {
+//       $lookup: {
+//         from: "User",
+//         localField: "author",
+//         foreignField: "_id",
+//         as: "authors",
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: "Admin",
+//         localField: "author",
+//         foreignField: "_id",
+//         as: "admins",
+//       },
+//     },
+//     { $unwind: { path: "$authors", preserveNullAndEmptyArrays: true } },
+//     { $unwind: { path: "$admins", preserveNullAndEmptyArrays: true } },
+//     {
+//       $match: {
+//         $or: [
+//           { title: { $regex: query, $options: "i" } },
+//           { description: { $regex: query, $options: "i" } },
+//           { "authors.name": { $regex: query, $options: "i" } },
+//           { "authors.email": { $regex: query, $options: "i" } },
+//           { "admins.name": { $regex: query, $options: "i" } },
+//           { "admins.email": { $regex: query, $options: "i" } },
+//         ],
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: null,
+//         data: { $push: "$$ROOT" },
+//         count: { $sum: 1 },
+//       },
+//     },
+//     {
+//       $project: {
+//         _id: 0,
+//         data: 1,
+//         count: 1,
+//       },
+//     },
+//   ]);
+
+//   const result = data.length ? data[0] : { data: [], count: 0 };
+//   res.status(200).json({
+//     status: true,
+//     data: result.data,
+//     count: result.count,
+//   });
+// });
+
+// get blogs but dont search
 exports.searchBlogs = catchAsync(async (req, res, next) => {
-  const { query, type, status, duration } = req.query;
-  const filter = { type };
-  if (status && status !== "all") filter.isActive = status;
+  const { status, duration } = req.query;
+  const filter = { $and: [{ type: "blog" }] };
+  if (status !== "all") {
+    filter["$and"].push({ isActive: status === "true" ? true : false });
+  }
   const { status: isValidDuration, firstDay, lastDay } = generateDate(duration);
   if (!isValidDuration) {
     return next(new AppError("Invalid Duration", 500));
   }
-  filter.createdAt = {
-    gte: firstDay,
-    lt: lastDay,
-  };
-  const data = await contentModel.aggregate([
-    { $match: filter },
-    {
-      $lookup: {
-        from: "User",
-        localField: "author",
-        foreignField: "_id",
-        as: "authors",
-      },
-    },
-    {
-      $lookup: {
-        from: "Admin",
-        localField: "author",
-        foreignField: "_id",
-        as: "admins",
-      },
-    },
-    { $unwind: { path: "$authors", preserveNullAndEmptyArrays: true } },
-    { $unwind: { path: "$admins", preserveNullAndEmptyArrays: true } },
-    {
-      $match: {
-        $or: [
-          { title: { $regex: query, $options: "i" } },
-          { description: { $regex: query, $options: "i" } },
-          { "authors.name": { $regex: query, $options: "i" } },
-          { "authors.email": { $regex: query, $options: "i" } },
-          { "admins.name": { $regex: query, $options: "i" } },
-          { "admins.email": { $regex: query, $options: "i" } },
-        ],
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        data: { $push: "$$ROOT" },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        data: 1,
-        count: 1,
-      },
-    },
+  filter["$and"].push(
+    ...[{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }]
+  );
+  const [data, total] = await Promise.all([
+    contentModel.find(filter),
+    (await contentModel.find(filter)).length,
   ]);
 
-  const result = data.length ? data[0] : { data: [], count: 0 };
   res.status(200).json({
-    status: "success",
-    data: result.data,
-    count: result.count,
+    status: true,
+    data: data,
+    count: total,
   });
 });
 

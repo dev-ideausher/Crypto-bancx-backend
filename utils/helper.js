@@ -62,6 +62,9 @@ const searchNewsOrVideos = (model) => {
       firstDay,
       lastDay,
     } = generateDate(duration);
+    if (!isValidDuration) {
+      return next(new AppError("Invalid Duration", 500));
+    }
     let filter = {};
     if (userId) {
       filter.author = userId;
@@ -70,21 +73,23 @@ const searchNewsOrVideos = (model) => {
       filter.type = type;
     }
     if (status && status !== "all") {
-      filter.isActive = status;
+      filter.isActive = status === "true" ? true : false;
     }
     filter.createdAt = {
-      gte: firstDay,
-      lt: lastDay,
+      $gte: firstDay,
+      $lt: lastDay,
     };
-    if (isDate(query)) {
-      let date = new Date(query);
-      filter["$or"] = [{ createdAt: date }];
-    } else {
-      filter["$or"] = [
-        { title: { $regex: query, $options: "i" } },
-        // { description: { $regex: query, $options: "i" } },
-      ];
-    }
+
+    // uncomment if u need search part
+    // if (isDate(query)) {
+    //   let date = new Date(query);
+    //   filter["$or"] = [{ createdAt: date }];
+    // } else {
+    //   filter["$or"] = [
+    //     { title: { $regex: query, $options: "i" } },
+    //     // { description: { $regex: query, $options: "i" } },
+    //   ];
+    // }
     const searchResult = await model
       .find(filter)
       .populate("author", "name email image");
@@ -109,6 +114,10 @@ const generateDate = (duration) => {
     var first = last - 30;
     var firstDay = new Date(new Date().setDate(first));
     var lastDay = new Date(new Date().setDate(last));
+  } else if (duration === "year") {
+    let curr = new Date();
+    var firstDay = new Date(curr.getFullYear(), 01, 01);
+    var lastDay = new Date(curr.getFullYear(), 12, 31);
   } else {
     return { status: false };
   }
