@@ -348,9 +348,19 @@ exports.changeContentStatus = disableFunction(contentModel);
 exports.changeVideoStatus = disableFunction(videoModel);
 
 exports.searchBlogs = catchAsync(async (req, res, next) => {
-  const { query, type } = req.query;
+  const { query, type, status, duration } = req.query;
+  const filter = { type };
+  if (status && status !== "all") filter.isActive = status;
+  const { status: isValidDuration, firstDay, lastDay } = generateDate(duration);
+  if (!isValidDuration) {
+    return next(new AppError("Invalid Duration", 500));
+  }
+  filter.createdAt = {
+    gte: firstDay,
+    lt: lastDay,
+  };
   const data = await contentModel.aggregate([
-    { $match: { type } },
+    { $match: filter },
     {
       $lookup: {
         from: "User",

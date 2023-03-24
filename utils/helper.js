@@ -56,14 +56,21 @@ const isDate = (str) => {
 
 const searchNewsOrVideos = (model) => {
   return catchAsync(async (req, res, next) => {
-    const { query, type, userId } = req.query;
-
+    const { query, type, userId, status, duration } = req.query;
+    const {
+      status: isValidDuration,
+      firstDay,
+      lastDay,
+    } = generateDate(duration);
     let filter = {};
     if (userId) {
       filter.author = userId;
     }
     if (type) {
       filter.type = type;
+    }
+    if (status && status !== "all") {
+      filter.isActive = status;
     }
     if (isDate(query)) {
       let date = new Date(query);
