@@ -18,7 +18,22 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());
 
-app.use(cors("*"));
+app.use(
+  cors({
+    credentials: true,
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3002",
+      "https://blockhole.vercel.app",
+      "https://blockhole-admin.vercel.app",
+      "https://admin.blockhole.io",
+      "https://blockhole.io",
+      "https://web-blockhole.vercel.app",
+      "https://blockhole-admin-xi.vercel.app",
+      "https://blockhole-admin-dev-ideausher.vercel.app",
+    ],
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -43,7 +58,7 @@ const uploadFile = require("./utils/uploadFile");
 
 // router middleware's
 app.use(`${API_VERSION}/admin`, adminRoutes);
-app.use(`${API_VERSION}/user`,  userRoutes);
+app.use(`${API_VERSION}/user`, userRoutes);
 app.use(`${API_VERSION}/content`, contentRouter);
 app.use(`${API_VERSION}/testimonial`, testimonialRoutes);
 app.use(`${API_VERSION}/homepage`, homepageRoutes);
