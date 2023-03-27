@@ -436,7 +436,7 @@ exports.searchBlogs = catchAsync(async (req, res, next) => {
     ...[{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }]
   );
   const [data, total] = await Promise.all([
-    contentModel.find(filter),
+    contentModel.find(filter).populate("author"),
     (await contentModel.find(filter)).length,
   ]);
 
