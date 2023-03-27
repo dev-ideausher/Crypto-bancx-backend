@@ -152,5 +152,10 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.saveTopContent
 );
+router.get(
+  "/logout",
+  authController.validateToken(adminModel),
+  adminController.logout
+);
 
 module.exports = router;

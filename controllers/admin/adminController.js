@@ -546,3 +546,8 @@ exports.changeOrder = changeOrder(topContentModel);
 
 // save as top content
 exports.saveTopContent = setTop(topContentModel);
+
+// logout
+exports.logout = catchAsync(async (req, res, next) => {
+  res.clearCookie("token");
+});
