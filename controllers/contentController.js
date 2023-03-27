@@ -63,16 +63,8 @@ exports.deleteContent = catchAsync(async (req, res, next) => {
   const { contentId } = req.query;
   const findContent = await contentModel.findById(contentId);
   if (!findContent) return next(new AppError("Invalid content", 403));
-  const updatedContent = await contentModel.findOneAndUpdate(
-    { _id: contentId },
-    {
-      $set: {
-        isDeleted: true,
-      },
-    },
-    { new: true }
-  );
-  if (!updatedContent)
+  const updatedContent = await contentModel.deleteOne({ _id });
+  if (!updatedContent.acknowledged || updatedContent.deletedCount !== 1)
     return next(new AppError("Couldn't delete content.", 500));
   return res.status(200).json({
     status: true,
