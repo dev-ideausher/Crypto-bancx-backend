@@ -156,6 +156,12 @@ exports.addFavorite = catchAsync(async (req, res, next) => {
 // add tags
 exports.addTag = catchAsync(async (req, res, next) => {
   const { tag } = req.body;
+  const isExits = await tagModel.findOne({ name: tag });
+  if (isExits) {
+    return res
+      .status(200)
+      .json({ status: true, message: "Tag already exits.", tag: isExits });
+  }
   const newTag = await tagModel.create({ name: tag });
   return res
     .status(200)
@@ -187,7 +193,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
       .status(200)
       .json({ status: true, message: "Content found", content: content });
   }
-  
+
   if (page < 1 || pageSize <= 0)
     return next(new AppError("Invalid page number or page size", 403));
   if (!redisClient.isOpen) {
