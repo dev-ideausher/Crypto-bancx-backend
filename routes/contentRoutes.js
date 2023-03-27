@@ -10,6 +10,7 @@ router.post(
   authController.validateToken(adminModel),
   contentController.addTag
 );
+router.post("/all-tags", contentController.getAllTags);
 
 router.post(
   "/add-view",

@@ -11,7 +11,7 @@ const redisClient = require("../config/redis");
 const EXPIRY_TIME = 3600;
 // add content
 exports.addContent = catchAsync(async (req, res, next) => {
-  const { title, description, thumbnail,content, type, tags } = req.body;
+  const { title, description, thumbnail, content, type, tags } = req.body;
 
   const newContent = await contentModel.create({
     title,
@@ -20,7 +20,7 @@ exports.addContent = catchAsync(async (req, res, next) => {
     author: req.user._id,
     type,
     tags,
-    thumbnail
+    thumbnail,
   });
   if (!newContent) return next(new AppError("Couldn't create content", 500));
   return res.status(200).json({
@@ -159,6 +159,15 @@ exports.addTag = catchAsync(async (req, res, next) => {
   return res
     .status(200)
     .json({ status: true, message: "New tag added", tag: newTag });
+});
+
+// get all tags
+exports.getAllTags = catchAsync(async (req, res, next) => {
+  const tags = await tagModel.find({});
+  return res.status(200).json({
+    status: true,
+    data: tags,
+  });
 });
 
 // get latest news
