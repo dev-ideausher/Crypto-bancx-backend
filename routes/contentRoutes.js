@@ -13,7 +13,7 @@ router.post(
 
 router.post(
   "/add-view",
-  // authController.validateToken(adminModel),
+  authController.validateToken(adminModel),
   contentController.addViews
 );
 

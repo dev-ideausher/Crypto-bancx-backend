@@ -347,6 +347,18 @@ exports.searchVideos = searchNewsOrVideos(videoModel);
 exports.changeContentStatus = disableFunction(contentModel);
 exports.changeVideoStatus = disableFunction(videoModel);
 
+// delete blogs
+exports.deleteBlogs = catchAsync(async (req, res, next) => {
+  const { _id } = req.query;
+  const deleteBlog = await contentModel.deleteOne({ _id });
+  if (!deleteBlog.acknowledged || deleteBlog.deletedCount !== 1) {
+    return next(new AppError("Unable to delete blog", 500));
+  }
+  return res
+    .status(200)
+    .json({ status: true, message: "Blog has been deleted." });
+});
+
 // search blog function, its working.
 // exports.searchBlogs = catchAsync(async (req, res, next) => {
 //   const { query, type, status, duration } = req.query;

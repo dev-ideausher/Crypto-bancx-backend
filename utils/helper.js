@@ -69,7 +69,9 @@ const searchNewsOrVideos = (model) => {
     if (userId) {
       filter.author = userId;
     }
-    if (type) {
+    if (!type) {
+      filter.type = "news";
+    } else {
       filter.type = type;
     }
     if (status && status !== "all") {
