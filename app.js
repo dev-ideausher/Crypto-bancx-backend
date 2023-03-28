@@ -31,7 +31,7 @@ app.use(
       "https://web-blockhole.vercel.app",
       "https://blockhole-admin-xi.vercel.app",
       "https://blockhole-admin-dev-ideausher.vercel.app",
-      "https://web-crypto-banc-x-admin.vercel.app/"
+      "https://web-crypto-banc-x-admin.vercel.app"
     ],
   })
 );
