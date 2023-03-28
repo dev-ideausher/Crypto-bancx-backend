@@ -56,7 +56,14 @@ const isDate = (str) => {
 
 const searchNewsOrVideos = (model) => {
   return catchAsync(async (req, res, next) => {
-    const { query, type, userId, status, duration } = req.query;
+    const { query, type, userId, status, duration, _id } = req.query;
+    if (_id) {
+      const blog = await contentModel.findOne({ _id });
+      if (!blog) {
+        return next(new AppError("Invalid content", 500));
+      }
+      return res.status(200).json({ status: true, blog: blog });
+    }
     const {
       status: isValidDuration,
       firstDay,

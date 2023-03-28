@@ -435,7 +435,14 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
 
 // get blogs but dont search
 exports.searchBlogs = catchAsync(async (req, res, next) => {
-  const { status, duration } = req.query;
+  const { status, duration, _id } = req.query;
+  if (_id) {
+    const blog = await contentModel.findOne({ _id });
+    if (!blog) {
+      return next(new AppError("Invalid content", 500));
+    }
+    return res.status(200).json({ status: true, blog: blog });
+  }
   const filter = { $and: [{ type: "blog" }] };
   if (status !== "all") {
     filter["$and"].push({ isActive: status === "true" ? true : false });
@@ -448,7 +455,10 @@ exports.searchBlogs = catchAsync(async (req, res, next) => {
     ...[{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }]
   );
   const [data, total] = await Promise.all([
-    contentModel.find(filter).populate("author", "name email image"),
+    contentModel
+      .find(filter)
+      .populate("author", "name email image")
+      .sort({ createdAt: -1 }),
     (await contentModel.find(filter)).length,
   ]);
 
