@@ -102,6 +102,7 @@ const searchNewsOrVideos = (model) => {
     const searchResult = await model
       .find(filter)
       .populate("author", "name email image")
+      .populate("tags")
       .sort({ createdAt: -1 });
     return res
       .status(200)

@@ -437,7 +437,7 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
 exports.searchBlogs = catchAsync(async (req, res, next) => {
   const { status, duration, _id } = req.query;
   if (_id) {
-    const blog = await contentModel.findOne({ _id });
+    const blog = await contentModel.findOne({ _id }).populate("tags");
     if (!blog) {
       return next(new AppError("Invalid content", 500));
     }
