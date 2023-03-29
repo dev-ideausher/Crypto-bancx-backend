@@ -194,7 +194,7 @@ exports.changeAdminStatus = catchAsync(async (req, res, next) => {
     { _id: adminId },
     {
       $set: {
-        isActive: isAdminExists.active ? false : true,
+        isActive: isAdminExists.isActive ? false : true,
       },
     }
   );
