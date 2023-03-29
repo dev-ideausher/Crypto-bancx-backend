@@ -65,7 +65,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError(err, 400));
   }
 
-  const { token } = generateJWTToken(isAdminExists._id, "3h");
+  const { token } = generateJWTToken(isAdminExists._id, "5h");
   return res
     .status(200)
     .cookie("token", token, {

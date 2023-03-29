@@ -7,7 +7,7 @@ const adminModel = require("../models/adminModel");
 
 exports.validateToken = (model) => {
   return catchAsync(async (req, res, next) => {
-    const token = req.header("Authorization").split("Bearer")[1].trim();
+    const token = req.cookies.token;
     if (!token) return next(new AppError("Token is not present.", 400));
     const { userId } = jwt.verify(token, JWT_SECRETE_KEY);
     const user = await model.findById(userId);
@@ -18,7 +18,7 @@ exports.validateToken = (model) => {
 };
 exports.checkRole = (model) => {
   return catchAsync(async (req, res, next) => {
-    const token = req.header("Authorization").split("Bearer")[1].trim();
+    const token = req.cookies.token;
     if (!token) return next(new AppError("Token is not present.", 400));
     const { userId } = jwt.verify(token, JWT_SECRETE_KEY);
     let user;
