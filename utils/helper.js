@@ -58,7 +58,7 @@ const searchNewsOrVideos = (model) => {
   return catchAsync(async (req, res, next) => {
     const { query, type, userId, status, duration, _id } = req.query;
     if (_id) {
-      const blog = await model.findOne({ _id });
+      const blog = await model.findOne({ _id }).populate("tags");
       if (!blog) {
         return next(new AppError("Invalid content", 500));
       }
