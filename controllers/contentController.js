@@ -34,6 +34,11 @@ exports.addContent = catchAsync(async (req, res, next) => {
 exports.updateContent = catchAsync(async (req, res, next) => {
   const { title, description, content, contentId, author, type, tags } =
     req.body;
+  if (!["admin", "subAdmin"].includes(req.user.role)) {
+    return next(
+      new AppError("You don't have the permission to perform this action", 500)
+    );
+  }
   const findContent = await contentModel.findById(contentId);
   if (!findContent) return next(new AppError("Invalid content", 403));
   const updatedContent = await contentModel.findOneAndUpdate(
