@@ -560,4 +560,5 @@ exports.saveTopContent = setTop(topContentModel);
 // logout
 exports.logout = catchAsync(async (req, res, next) => {
   res.clearCookie("token");
+  return res.status(200).json({ status: true });
 });
