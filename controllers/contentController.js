@@ -32,8 +32,15 @@ exports.addContent = catchAsync(async (req, res, next) => {
 
 // update content
 exports.updateContent = catchAsync(async (req, res, next) => {
-  const { title, description, content, contentId, author, type, tags } =
-    req.body;
+  const {
+    title,
+    description,
+    content,
+    contentId,
+
+    tags,
+    thumbnail,
+  } = req.body;
   if (!["admin", "subAdmin"].includes(req.user.role)) {
     return next(
       new AppError("You don't have the permission to perform this action", 500)
@@ -48,9 +55,8 @@ exports.updateContent = catchAsync(async (req, res, next) => {
         title,
         description,
         content,
-        author,
-        type,
         tags,
+        thumbnail,
       },
     },
     { new: true }
