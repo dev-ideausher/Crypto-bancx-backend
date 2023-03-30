@@ -215,12 +215,12 @@ const changeOrder = () => {
 const setTop = () => {
   return catchAsync(async (req, res, next) => {
     const { _id, type } = req.body;
-    const current = await topContentModel.findById(_id);
-    if (!current) {
-      return next(new AppError("Invalid Content", 500));
+    const current = await topContentModel.findOne({ _id, type });
+    if (current) {
+      return next(new AppError(" Content Already present", 500));
     }
     const otherDocs = await topContentModel.find({
-      _id: { $ne: current._id },
+      _id: { $ne: _id },
       type,
     });
     const update = await Promise.all([
