@@ -245,6 +245,63 @@ const setTop = () => {
       .json({ status: true, message: "Priority has been updated." });
   });
 };
+
+// delete
+const permanentDeleteTopContent = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const { _id, type } = req.query;
+    const current = await model.findById(_id);
+    if (!current) {
+      return next(new AppError("Invalid data", 500));
+    }
+    // const isDeleted = await model.deleteOne({ _id: current._id });
+    // if (!isDeleted.acknowledged || isDeleted.deletedCount !== 1) {
+    //   return next(new AppError("Unable to Delete", 500));
+    // }
+    const otherDocs = await model.find({
+      priority: { $gt: current.priority },
+      type,
+    });
+    const data = await Promise.all([
+      model.deleteOne({ _id: current._id }),
+      ...otherDocs.map((doc) => {
+        return model.findOneAndUpdate(
+          { _id: doc._id },
+          { $set: { priority: doc.priority - 1 } },
+          { new: true }
+        );
+      }),
+    ]);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Successfully Delete. ", data: data });
+  });
+};
+
+// add to top content
+const addToTopContent = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const { type, contentId } = req.body;
+    const [leastPriority] = model
+      .find({ type })
+      .sort({ priority: -1 })
+      .limit(1);
+    if (!leastPriority) {
+      return next(new AppError("Something went wrong", 500));
+    }
+    const addContent = await model.create({
+      contentId,
+      type,
+      priority: leastPriority.priority + 1,
+    });
+    if (!addContent) {
+      return next(new AppError("Unable to save data", 500));
+    }
+    return res.status(200).json({ status: true, message: "data saved" });
+  });
+};
+
 module.exports = {
   searchQuery,
   generateJWTToken,
@@ -255,4 +312,6 @@ module.exports = {
   generateDate,
   changeOrder,
   setTop,
+  permanentDeleteTopContent,
+  addToTopContent,
 };

@@ -152,10 +152,25 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.saveTopContent
 );
+router.post(
+  "/add-top",
+  authController.validateToken(adminModel),
+  adminController.addToTopContent
+);
+router.delete(
+  "/delete-top",
+  authController.validateToken(adminModel),
+  adminController.deleteTopContent
+);
 router.get(
   "/logout",
   authController.validateToken(adminModel),
   adminController.logout
+);
+router.patch(
+  "/edit-video",
+  authController.validateToken(adminModel),
+  adminController.editVideo
 );
 
 module.exports = router;

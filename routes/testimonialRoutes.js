@@ -5,12 +5,12 @@ const adminModel = require("../models/adminModel");
 
 router.post(
   "/add",
-  // authController.validateToken(adminModel),
+  authController.validateToken(adminModel),
   testimonialController.addTestimonials
 );
 router.patch(
   "/update",
-  // authController.validateToken(adminModel),
+  authController.validateToken(adminModel),
   testimonialController.updateTestimonials
 );
 router.delete(
@@ -20,8 +20,13 @@ router.delete(
 );
 router.get(
   "/all",
-  // authController.validateToken(adminModel),
+  authController.validateToken(adminModel),
   testimonialController.allTestimonials
+);
+router.patch(
+  "/disable",
+  authController.validateToken(adminModel),
+  testimonialController.disableTestimonials
 );
 
 module.exports = router;

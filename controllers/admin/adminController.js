@@ -11,6 +11,8 @@ const {
   generateDate,
   changeOrder,
   setTop,
+  permanentDeleteTopContent,
+  addToTopContent,
 } = require("../../utils/helper");
 const aboutUsModel = require("../../models/aboutUs");
 const employeeModel = require("../../models/employeeModel");
@@ -578,6 +580,12 @@ exports.changeOrder = changeOrder();
 
 // save as top content
 exports.saveTopContent = setTop(topContentModel);
+
+// delete top content
+exports.deleteTopContent = permanentDeleteTopContent(topContentModel);
+
+// add to top content
+exports.addToTopContent = addToTopContent(contentModel);
 
 // logout
 exports.logout = catchAsync(async (req, res, next) => {
