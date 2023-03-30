@@ -582,7 +582,7 @@ exports.saveTopContent = setTop(topContentModel);
 exports.deleteTopContent = permanentDeleteTopContent(topContentModel);
 
 // add to top content
-exports.addToTopContent = addToTopContent(contentModel);
+exports.addToTopContent = addToTopContent(topContentModel);
 
 // get all top content data
 exports.getAllTopContentData = catchAsync(async (req, res, next) => {
