@@ -283,12 +283,12 @@ const permanentDeleteTopContent = (model) => {
 const addToTopContent = (model) => {
   return catchAsync(async (req, res, next) => {
     const { type, contentId } = req.body;
-    const [leastPriority] = await model
+    let [leastPriority] = await model
       .find({ type })
       .sort({ priority: -1 })
       .limit(1);
     if (!leastPriority) {
-      return next(new AppError("Something went wrong", 500));
+      leastPriority = { priority: 0 };
     }
     const addContent = await model.create({
       contentId,
