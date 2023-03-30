@@ -19,7 +19,11 @@ const schema = new mongoose.Schema(
     testimonial: {
       type: String,
       required: true,
-      maxLength: 200,
+      maxLength: 250,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

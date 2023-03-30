@@ -1,6 +1,7 @@
 //for making regex search query
 const jwt = require("jsonwebtoken");
 const { JWT_SECRETE_KEY } = require("../config/config");
+const topContentModel = require("../models/topContentModel");
 const AppError = require("./appError");
 const catchAsync = require("./catchAsync");
 
@@ -176,34 +177,68 @@ const getData = (
 };
 
 // change order
-const changeOrder = (model) => {
+const changeOrder = () => {
   return catchAsync(async (req, res, next) => {
-    const { type, orderArray } = req.body;
-    const data = await Promise.all(
-      orderArray.map((single) =>
-        model.findOneAndUpdate(
-          { type, contentId: single._id },
-          { $set: { priority: single.priority } }
-        )
-      )
-    );
+    const { _id, type } = req.body;
+    const current = await topContentModel.findById(_id);
+    if (!current) {
+      return next(new AppError("Invalid data", 500));
+    }
+    if (current.priority <= 1) {
+      return next(new AppError("Can not reduce priority any more", 500));
+    }
+    const previous = await topContentModel.findOne({
+      priority: current.priority - 1,
+      type,
+    });
+
+    const updatedData = await Promise.all([
+      topContentModel.findOneAndUpdate(
+        { _id: current._id },
+        { $set: { priority: current.priority - 1 } }
+      ),
+      topContentModel.findOneAndUpdate(
+        { _id: previous._id },
+        { $set: { priority: previous.priority + 1 } }
+      ),
+    ]);
+    if (updatedData.length < 2) {
+      return next(new AppError("something went wrong", 500));
+    }
     return res
       .status(200)
-      .json({ status: true, message: "Order has been updated successfully." });
+      .json({ status: true, message: "Priority has been updated" });
   });
 };
 
 // set top blog or news or video
-const setTop = (model) => {
+const setTop = () => {
   return catchAsync(async (req, res, next) => {
-    const { type, _id } = req.body;
-    const update = await model.findOneAndUpdate(
-      { type, _id },
-      { $set: { priority: 1 } },
-      { new: true }
-    );
-    if (!update) {
-      return next(new AppError("Internal Server Error.", 500));
+    const { _id, type } = req.body;
+    const current = await topContentModel.findById(_id);
+    if (!current) {
+      return next(new AppError("Invalid Content", 500));
+    }
+    const otherDocs = await topContentModel.find({
+      _id: { $ne: current._id },
+      type,
+    });
+    const update = await Promise.all([
+      ...otherDocs.map((doc) =>
+        topContentModel.findOneAndUpdate(
+          { _id: doc._id },
+          { $set: { priority: doc.priority + 1 } },
+          { new: true }
+        )
+      ),
+      topContentModel.findOneAndUpdate(
+        { _id: current._id },
+        { $set: { priority: 1 } },
+        { new: true }
+      ),
+    ]);
+    if (update.length < (await topContentModel.find()).length) {
+      return next(new AppError("Something went wrong", 500));
     }
     return res
       .status(200)

@@ -14,7 +14,7 @@ const schema = new mongoose.Schema({
   },
   onModel: {
     type: String,
-    enum: ["Video", "Content"],
+    enum: ["Video", "Content", "Testimonial"],
   },
   priority: {
     type: Number,

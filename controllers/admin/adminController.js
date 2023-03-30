@@ -113,10 +113,13 @@ exports.deleteAdmin = catchAsync(async (req, res, next) => {
     return next(
       new AppError("You don't have the permission to do this activity.", 403)
     );
-
+  const findAdmin = await adminModel.findById(adminId);
+  if (!findAdmin) {
+    return next(new AppError("Invalid Admin", 500));
+  }
   const softDeleteAdmin = await adminModel.findOneAndUpdate(
     { _id: adminId },
-    { $set: { isDeleted: true } }
+    { $set: { isDeleted: true, email: findAdmin.email + "12345" } }
   );
   if (!softDeleteAdmin) return next(new AppError("Server Error.", 500));
 
@@ -347,6 +350,25 @@ exports.searchVideos = searchNewsOrVideos(videoModel);
 exports.changeContentStatus = disableFunction(contentModel);
 exports.changeVideoStatus = disableFunction(videoModel);
 
+// edit video
+exports.editVideo = catchAsync(async (req, res, next) => {
+  const { _id } = req.body;
+
+  const updatedVideo = await videoModel.findOneAndUpdate(
+    { _id },
+    { $set: req.body },
+    { new: true }
+  );
+  if (!updatedVideo) {
+    return next(new AppError("Something went wrong", 500));
+  }
+  return res.status(200).json({
+    status: true,
+    message: "Video has been Updated.",
+    video: updatedVideo,
+  });
+});
+
 // delete blogs
 exports.deleteBlogs = catchAsync(async (req, res, next) => {
   const { _id } = req.query;
@@ -552,7 +574,7 @@ exports.getSingleUser = catchAsync(async (req, res, next) => {
 exports.disableUser = disableFunction(userModel);
 
 // change order
-exports.changeOrder = changeOrder(topContentModel);
+exports.changeOrder = changeOrder();
 
 // save as top content
 exports.saveTopContent = setTop(topContentModel);
