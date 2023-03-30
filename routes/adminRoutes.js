@@ -163,6 +163,11 @@ router.delete(
   adminController.deleteTopContent
 );
 router.get(
+  "/all-top",
+  authController.validateToken(adminModel),
+  adminController.getAllTopContentData
+);
+router.get(
   "/logout",
   authController.validateToken(adminModel),
   adminController.logout

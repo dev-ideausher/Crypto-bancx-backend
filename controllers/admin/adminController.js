@@ -587,6 +587,12 @@ exports.deleteTopContent = permanentDeleteTopContent(topContentModel);
 // add to top content
 exports.addToTopContent = addToTopContent(contentModel);
 
+// get all top content data
+exports.getAllTopContentData = catchAsync(async (req, res, next) => {
+  const data = await topContentModel.find({ type: req.query.type });
+  return res.status(200).json({ status: true, data: data });
+});
+
 // logout
 exports.logout = catchAsync(async (req, res, next) => {
   res.clearCookie("token");
