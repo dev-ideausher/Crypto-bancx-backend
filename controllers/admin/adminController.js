@@ -586,7 +586,9 @@ exports.addToTopContent = addToTopContent(contentModel);
 
 // get all top content data
 exports.getAllTopContentData = catchAsync(async (req, res, next) => {
-  const data = await topContentModel.find({ type: req.query.type });
+  const data = await topContentModel
+    .find({ type: req.query.type })
+    .populate("contentId");
   return res.status(200).json({ status: true, data: data });
 });
 
