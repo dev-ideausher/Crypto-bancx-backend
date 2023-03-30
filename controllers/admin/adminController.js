@@ -533,10 +533,8 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await userModel.find({});
   const posts = await Promise.all(
-    users.map(
-      async (user) =>
-        await contentModel.find({ type: "blog", author: user._id })
-    ).length
+    users.map((user) => contentModel.find({ type: "blog", author: user._id }))
+      .length
   );
   users.forEach((user, idx) => {
     users[idx] = { ...user._doc, totalPosts: posts[idx] };
