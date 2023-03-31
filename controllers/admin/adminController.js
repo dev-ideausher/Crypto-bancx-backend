@@ -501,11 +501,12 @@ exports.getVideos = getData(videoModel);
 
 // create user
 exports.createNewUser = catchAsync(async (req, res, next) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, image } = req.body;
   const user = await firebase.auth().createUser({
     email: email,
     password,
     displayName: name,
+    photoURL: image,
   });
   if (!user) {
     return next(new AppError("Unable to create user", 500));
