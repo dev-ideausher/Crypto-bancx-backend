@@ -187,5 +187,10 @@ router.post(
   authController.validateToken(adminModel),
   adminController.addVideo
 );
+router.get(
+  "/user-blogs",
+  authController.validateToken(adminModel),
+  adminController.approveUserBlogs
+);
 
 module.exports = router;

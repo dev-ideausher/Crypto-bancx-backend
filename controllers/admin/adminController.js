@@ -162,7 +162,7 @@ exports.getSingleAdmin = catchAsync(async (req, res, next) => {
 
 // edit admin
 exports.editAdmin = catchAsync(async (req, res, next) => {
-  const { name,  image } = req.body;
+  const { name, image } = req.body;
 
   const updatedAdmin = await adminModel.findOneAndUpdate(
     { _id: req.user._id },
@@ -620,6 +620,9 @@ exports.getAllTopContentData = catchAsync(async (req, res, next) => {
     .sort({ priority: 1 });
   return res.status(200).json({ status: true, data: data });
 });
+
+// approve blogs
+exports.approveUserBlogs = getData(contentModel, "author", "name image email");
 
 // logout
 exports.logout = catchAsync(async (req, res, next) => {
