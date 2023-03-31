@@ -510,6 +510,16 @@ exports.getNewsOrBlogs = getData(contentModel);
 // get videos
 exports.getVideos = getData(videoModel);
 
+// delete video
+exports.deleteVideo = catchAsync(async (req, res, next) => {
+  const { _id } = req.query;
+  const deleted = await videoModel.deleteOne({ _id });
+  if (!deleted || !deleted.acknowledged || deleted.deletedCount !== 1) {
+    return next(new AppError("Something went wrong,", 500));
+  }
+  return res.status(200).json({ status: true, message: "Video deleted" });
+});
+
 // create user
 exports.createNewUser = catchAsync(async (req, res, next) => {
   const { email, password, name, image } = req.body;

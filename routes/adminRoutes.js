@@ -177,6 +177,11 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.editVideo
 );
+router.delete(
+  "/delete-video",
+  authController.validateToken(adminModel),
+  adminController.deleteVideo
+);
 router.post(
   "/add-video",
   authController.validateToken(adminModel),
