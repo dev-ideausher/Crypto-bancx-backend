@@ -162,17 +162,12 @@ exports.getSingleAdmin = catchAsync(async (req, res, next) => {
 
 // edit admin
 exports.editAdmin = catchAsync(async (req, res, next) => {
-  const { name, email, image } = req.body;
-  const findAdmin = await adminModel.findOne({ email: email });
-  if (findAdmin && String(findAdmin._id) !== String(req.user._id)) {
-    return next(new AppError("Email is already taken, Enter new Email", 403));
-  }
+  const { name,  image } = req.body;
 
   const updatedAdmin = await adminModel.findOneAndUpdate(
     { _id: req.user._id },
     {
       $set: {
-        email: email,
         name: name,
         image: image,
       },
