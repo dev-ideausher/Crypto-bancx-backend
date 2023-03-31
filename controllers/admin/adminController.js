@@ -531,7 +531,18 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
 
 // get all users
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await userModel.find({});
+  const { duration, status } = req.query;
+  const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
+  if (!isSuccess) {
+    return next(new AppError("Invalid duration", 500));
+  }
+  let filter = {
+    $and: [{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }],
+  };
+  if (status && status !== "all") {
+    filter.isActive = status;
+  }
+  const users = await userModel.find(filter);
   const posts = await Promise.all(
     users.map((user) => contentModel.find({ type: "blog", author: user._id }))
   );
