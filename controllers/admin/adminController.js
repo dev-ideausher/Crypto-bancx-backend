@@ -352,6 +352,17 @@ exports.searchVideos = searchNewsOrVideos(videoModel);
 exports.changeContentStatus = disableFunction(contentModel);
 exports.changeVideoStatus = disableFunction(videoModel);
 
+// add video
+exports.addVideo = catchAsync(async (req, res, next) => {
+  const video = await videoModel.create({ ...req.body, author: req.user._id });
+  if (!video) {
+    return next(new AppError("Something went wrong.", 500));
+  }
+  return res
+    .status(200)
+    .json({ status: true, message: "Video has been added", video: video });
+});
+
 // edit video
 exports.editVideo = catchAsync(async (req, res, next) => {
   const { _id } = req.body;

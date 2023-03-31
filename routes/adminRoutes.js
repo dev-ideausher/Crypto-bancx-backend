@@ -177,5 +177,10 @@ router.patch(
   authController.validateToken(adminModel),
   adminController.editVideo
 );
+router.post(
+  "/add-video",
+  authController.validateToken(adminModel),
+  adminController.addVideo
+);
 
 module.exports = router;
