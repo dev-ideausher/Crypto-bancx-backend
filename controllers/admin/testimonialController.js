@@ -1,7 +1,7 @@
 const testimonialModel = require("../../models/testimonials");
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
-const { disableFunction } = require("../../utils/helper");
+const { disableFunction, generateDate } = require("../../utils/helper");
 
 exports.addTestimonials = catchAsync(async (req, res, next) => {
   const { name, position, image, testimonial } = req.body;
