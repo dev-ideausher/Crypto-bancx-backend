@@ -59,6 +59,14 @@ exports.deleteTestimonials = catchAsync(async (req, res, next) => {
 
 // get all testimonials
 exports.allTestimonials = catchAsync(async (req, res, next) => {
+  const {_id} = req.query
+  if(_id) {
+    const test = await testimonialModel.findById(_id)
+    if(!test){
+      return next(new AppError("Invalid id",500))
+    }
+    return res.status(200).json({status: true, data: test})
+  }
   const testimonials = await testimonialModel.find({});
 
   return res.status(200).json({
