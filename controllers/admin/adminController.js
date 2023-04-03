@@ -518,9 +518,10 @@ exports.deleteVideo = catchAsync(async (req, res, next) => {
 // create user
 exports.createNewUser = catchAsync(async (req, res, next) => {
   const { email, password, name, image } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const user = await firebase.auth().createUser({
     email: email,
-    password,
+    password: hashedPassword,
     displayName: name,
     photoURL: image,
   });
@@ -537,6 +538,7 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
     ...req.body,
     firebaseUid: user.uid,
     firebaseSignInProvider: user.providerData,
+    password: hashedPassword,
   });
   if (!saveUserInDB) {
     return next(new AppError("Unable to save user", 500));
@@ -623,6 +625,21 @@ exports.getAllTopContentData = catchAsync(async (req, res, next) => {
 
 // approve blogs
 exports.approveUserBlogs = getData(contentModel, "author", "name image email");
+
+// change blog status
+exports.changeBlogStatus = catchAsync(async (req, res, next) => {
+  const { _id } = req.body;
+  const disableData = await contentModel.findOneAndUpdate(
+    { _id },
+    { $set: { isApproved: false } }
+  );
+  if (!disableData) {
+    return next(new AppError("Something went wrong.", 500));
+  }
+  return res
+    .status(200)
+    .json({ status: true, message: "Successfully disabled." });
+});
 
 // logout
 exports.logout = catchAsync(async (req, res, next) => {
