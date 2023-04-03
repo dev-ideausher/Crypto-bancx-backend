@@ -192,5 +192,10 @@ router.get(
   authController.validateToken(adminModel),
   adminController.approveUserBlogs
 );
+router.get(
+  "/change-display-status",
+  authController.validateToken(adminModel),
+  adminController.changeBlogStatus
+);
 
 module.exports = router;
