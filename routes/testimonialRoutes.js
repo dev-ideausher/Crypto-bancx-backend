@@ -15,7 +15,7 @@ router.patch(
 );
 router.delete(
   "/delete",
-  // authController.validateToken(adminModel),
+  authController.validateToken(adminModel),
   testimonialController.deleteTestimonials
 );
 router.get(
