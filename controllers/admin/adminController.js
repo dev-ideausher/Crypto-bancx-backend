@@ -537,7 +537,7 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
   const saveUserInDB = await userModel.create({
     ...req.body,
     firebaseUid: user.uid,
-    firebaseSignInProvider: user.providerData,
+    // firebaseSignInProvider: user.providerData,
     password: hashedPassword,
   });
   if (!saveUserInDB) {
