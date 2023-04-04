@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
     },
     firebaseSignInProvider: {
       type: String,
-      required: true,
+      // required: true,
     },
     invitedBy: {
       type: String,
