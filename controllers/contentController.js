@@ -194,7 +194,10 @@ exports.latestContent = catchAsync(async (req, res, next) => {
         content: JSON.parse(dataExists),
       });
     }
-    const content = await contentModel.findById(contentId).populate("tags");
+    const content = await contentModel
+      .findById(contentId)
+      .populate("tags")
+      .populate("author");
     if (!content) return next(new AppError("Content not found", 404));
 
     await redisClient.SETEX(
@@ -229,7 +232,8 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     .sort({ createdAt: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize)
-    .populate("tags");
+    .populate("tags")
+    .populate("author");
 
   const total = (await contentModel.find()).length;
 
@@ -324,7 +328,10 @@ exports.trending = catchAsync(async (req, res, next) => {
 exports.getTopContent = catchAsync(async (req, res, next) => {
   const { type, _id } = req.query;
   if (_id) {
-    const content = await contentModel.findById(_id).populate("tags");
+    const content = await contentModel
+      .findById(_id)
+      .populate("tags")
+      .populate("author");
     if (!content) {
       return next(new AppError("Invalid id", 500));
     }
