@@ -13,6 +13,7 @@ const {
   setTop,
   permanentDeleteTopContent,
   addToTopContent,
+  decreaseContentOrder,
 } = require("../../utils/helper");
 const aboutUsModel = require("../../models/aboutUs");
 const employeeModel = require("../../models/employeeModel");
@@ -604,6 +605,9 @@ exports.disableUser = disableFunction(userModel);
 
 // change order
 exports.changeOrder = changeOrder();
+
+// decrease order
+exports.decreaseOrder = decreaseContentOrder();
 
 // save as top content
 exports.saveTopContent = setTop(topContentModel);

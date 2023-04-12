@@ -302,6 +302,43 @@ const addToTopContent = (model) => {
   });
 };
 
+// decrease order
+const decreaseContentOrder = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const { _id, type } = req.body;
+    const current = await topContentModel.findOne({ _id, type });
+    if (!current) {
+      return next(new AppError("Invalid data", 500));
+    }
+    const nextEle = await topContentModel.findOne({
+      priority: current.priority + 1,
+      type,
+    });
+    if (!nextEle) {
+      return next(new AppError("last element, can not go more deep", 500));
+    }
+
+    const updatedData = await Promise.all([
+      topContentModel.findOneAndUpdate(
+        { _id: current._id },
+        { $set: { priority: nextEle.priority } },
+        { new: true }
+      ),
+      topContentModel.findOneAndUpdate(
+        { _id: nextEle._id },
+        { $set: { priority: current.priority } },
+        { new: true }
+      ),
+    ]);
+    if (updatedData.length < 2) {
+      return next(new AppError("something went wrong", 500));
+    }
+    return res
+      .status(200)
+      .json({ status: true, message: "Priority has been updated" });
+  });
+};
+
 module.exports = {
   searchQuery,
   generateJWTToken,
@@ -314,4 +351,5 @@ module.exports = {
   setTop,
   permanentDeleteTopContent,
   addToTopContent,
+  decreaseContentOrder,
 };

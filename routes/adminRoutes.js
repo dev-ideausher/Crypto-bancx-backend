@@ -148,6 +148,11 @@ router.patch(
   adminController.changeOrder
 );
 router.patch(
+  "/change-content-order-desc",
+  authController.validateToken(adminModel),
+  adminController.decreaseOrder
+);
+router.patch(
   "/save-top",
   authController.validateToken(adminModel),
   adminController.saveTopContent
