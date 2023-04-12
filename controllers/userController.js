@@ -116,13 +116,17 @@ exports.addComment = catchAsync(async (req, res, next) => {
 
 // crypto tracker
 exports.cryptoTracker = catchAsync(async (req, res, next) => {
+  const { type, page, limit } = req.query;
   let chains = "bitcoin,solana,ethereum,polygon,fantom";
   const { id } = req.query;
   if (id) {
     chains = id;
   }
+  if (type === "all") {
+    chains = "";
+  }
   const data = await axios.get(
-    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false`
   );
   return res.status(200).json({ status: true, cryptoData: data.data });
 });

@@ -194,8 +194,9 @@ exports.latestContent = catchAsync(async (req, res, next) => {
         content: JSON.parse(dataExists),
       });
     }
-    const content = await contentModel.findById(contentId);
+    const content = await contentModel.findById(contentId).populate("tags");
     if (!content) return next(new AppError("Content not found", 404));
+
     await redisClient.SETEX(
       `latest?contentId=${contentId}`,
       EXPIRY_TIME,
