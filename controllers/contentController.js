@@ -228,7 +228,8 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     .find({ type })
     .sort({ createdAt: -1 })
     .skip(pageSize * (page - 1))
-    .limit(pageSize);
+    .limit(pageSize)
+    .populate("tags");
 
   const total = (await contentModel.find()).length;
 
