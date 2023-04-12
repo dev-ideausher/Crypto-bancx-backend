@@ -16,6 +16,12 @@ router.post("/generate-token/:uid", generateToken);
 router.get("/testimonials", userController.getAllTestimonials);
 router.get("/tags", userController.getAllTags);
 router.get("/top-content", getTopContent);
+router.get("/watch-list", requiresAuth, userController.addToWatchList);
+router.get(
+  "/watch-list-all",
+  requiresAuth,
+  userController.getAllWatchListCoins
+);
 // router.get("/all-users",userController.getAllUsers);
 // router.patch("/:userId",requiresAuth,userController.updateUser);
 // router.get("/:userId",userController.getAUser);

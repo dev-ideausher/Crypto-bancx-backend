@@ -11,6 +11,7 @@ const { default: axios } = require("axios");
 const { CRYPTO_TRACKER_URL } = require("../config/config");
 const testimonialModel = require("../models/testimonials");
 const tagModel = require("../models/tagModel");
+const watchListModel = require("../models/watchlistModel");
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
@@ -116,6 +117,10 @@ exports.addComment = catchAsync(async (req, res, next) => {
 // crypto tracker
 exports.cryptoTracker = catchAsync(async (req, res, next) => {
   let chains = "bitcoin,solana,ethereum,polygon,fantom";
+  const { id } = req.query;
+  if (id) {
+    chains = id;
+  }
   const data = await axios.get(
     `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
   );
@@ -132,6 +137,50 @@ exports.getAllTestimonials = catchAsync(async (req, res, next) => {
 
 // get all tags
 exports.getAllTags = catchAsync(async (req, res, next) => {
-  const tags = await tagModel.find();
+  const { limit } = req.query;
+  const tags = await tagModel.find().sort({ views: -1 }).limit(limit);
   return res.status(200).json({ status: true, message: "", data: tags });
+});
+
+// add to watchList
+exports.addToWatchList = catchAsync(async (req, res, next) => {
+  const { id } = req.query;
+  const isExits = await watchListModel.findOne({ id, userId: req.user._id });
+  if (isExits) {
+    const removeFromWatchList = await watchListModel.deleteOne({
+      id,
+      userId: req.user._id,
+    });
+    if (
+      !removeFromWatchList.acknowledged ||
+      removeFromWatchList.deletedCount !== 1
+    ) {
+      return next(new AppError("Something went wrong", 500));
+    }
+    return res
+      .status(200)
+      .json({ status: true, message: "Successfully removed from watch list" });
+  }
+
+  const addToWatchList = await watchListModel.create({
+    id,
+    userId: req.user._id,
+  });
+  if (!addToWatchList) {
+    return next(new AppError("Something went wrong", 500));
+  }
+  return res
+    .status(200)
+    .json({ status: true, message: "Successfully added to watch list" });
+});
+
+// get all from watchList
+exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
+  const data = await watchListModel.find({ userId: req.user._id });
+  let chains = "";
+  data.forEach((coin) => (chains = chains + coin.id + ","));
+  const finalData = await axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+  );
+  return res.status(200).json({ status: true, message: "", data: finalData });
 });
