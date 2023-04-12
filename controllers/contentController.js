@@ -347,7 +347,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
         path: "author",
         select: "name image email",
       },
-      strictPopulate: false,
+      options: { strictPopulate: false }
     })
     .limit(5)
     .sort({ priority: 1 });
