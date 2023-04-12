@@ -24,6 +24,7 @@ router.get(
 );
 // router.get("/all-users",userController.getAllUsers);
 // router.patch("/:userId",requiresAuth,userController.updateUser);
-// router.get("/:userId",userController.getAUser);
+router.get("/single", requiresAuth, userController.getAUser);
+router.get("/logout", requiresAuth, userController.logout);
 
 module.exports = router;

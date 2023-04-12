@@ -55,9 +55,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
 //get a user
 exports.getAUser = catchAsync(async (req, res, next) => {
-  const userId = req.params.userId;
-
-  let user = await User.findById(userId);
+  let user = await User.findById(req.user._id);
   return res.status(200).json({
     status: true,
     message: "get user details",
@@ -187,4 +185,9 @@ exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
     `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
   );
   return res.status(200).json({ status: true, message: "", data: finalData });
+});
+
+exports.logout = catchAsync(async (req, res, next) => {
+  res.clearCookie("token");
+  return res.status(200).json({ status: true });
 });
