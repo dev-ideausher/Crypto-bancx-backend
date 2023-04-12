@@ -197,7 +197,7 @@ router.get(
   authController.validateToken(adminModel),
   adminController.approveUserBlogs
 );
-router.get(
+router.patch(
   "/change-display-status",
   authController.validateToken(adminModel),
   adminController.changeBlogStatus
