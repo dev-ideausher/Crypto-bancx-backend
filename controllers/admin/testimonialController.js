@@ -1,4 +1,5 @@
 const testimonialModel = require("../../models/testimonials");
+const topContentModel = require("../../models/topContentModel");
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const { disableFunction, generateDate } = require("../../utils/helper");
@@ -13,6 +14,18 @@ exports.addTestimonials = catchAsync(async (req, res, next) => {
   });
 
   if (!newTestimonial) return next(new AppError("Something went wrong", 500));
+  const existingTestimonials = (
+    await topContentModel.find({ type: "testimonial" })
+  ).length;
+  const saveToTopContentModel = await topContentModel.create({
+    type: "testimonial",
+    contentId: newTestimonial._id,
+    priority: existingTestimonials + 1,
+  });
+  if (!saveToTopContentModel) {
+    return next("Unable to save to top model", 500);
+  }
+
   return res.status(200).json({
     status: true,
     message: "Testimonial added",
@@ -50,6 +63,9 @@ exports.deleteTestimonials = catchAsync(async (req, res, next) => {
 
   if (!deleteTestimonial.acknowledged || deleteTestimonial.deletedCount !== 1)
     return next(new AppError("Something went wrong", 500));
+  const deleteFromTopModel = await topContentModel.deleteOne({
+    contentId: _id,
+  });
   return res.status(200).json({
     status: true,
     message: "Testimonial deleted",
