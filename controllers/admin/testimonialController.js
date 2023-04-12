@@ -98,7 +98,9 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
     filter.isActive = status;
   }
 
-  const testimonials = await topContentModel.find(filter);
+  const testimonials = await topContentModel
+    .find(filter)
+    .populate("contentId");
 
   return res.status(200).json({
     status: true,
