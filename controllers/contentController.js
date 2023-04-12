@@ -7,6 +7,7 @@ const tagModel = require("../models/tagModel");
 const favoriteModel = require("../models/favoriteModel");
 const redis = require("redis");
 const redisClient = require("../config/redis");
+const topContentModel = require("../models/topContentModel");
 
 const EXPIRY_TIME = 3600;
 // add content
@@ -315,4 +316,35 @@ exports.trending = catchAsync(async (req, res, next) => {
   return res
     .status(200)
     .json({ status: true, message: `Trending ${type} found`, result: all });
+});
+
+// get top content
+exports.getTopContent = catchAsync(async (req, res, next) => {
+  const { type } = req.query;
+  const resultExists = await redisClient.get(`top-content/${type}`);
+  if (resultExists) {
+    //await redisClient.quit();
+    return res.status(200).json({
+      status: true,
+      message: "Result found",
+      result: JSON.parse(resultExists),
+    });
+  }
+  const topContent = await topContentModel
+    .find({ type })
+    .populate({
+      path: "contentId",
+      populate: {
+        path: "author",
+        select: "name image email",
+      },
+    })
+    .limit(5)
+    .sort({ priority: 1 });
+  await redisClient.SETEX(
+    `top-content/${type}`,
+    EXPIRY_TIME,
+    JSON.stringify(topContent)
+  );
+  return res.status(200).json({ status: true, message: "", data: topContent });
 });

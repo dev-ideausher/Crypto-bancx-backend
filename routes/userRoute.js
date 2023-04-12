@@ -1,3 +1,4 @@
+const { getTopContent } = require("../controllers/contentController");
 const {
   requiresAuth,
   generateToken,
@@ -12,6 +13,9 @@ router.post("/add-comment", requiresAuth, userController.addComment);
 router.get("/get-crypto", userController.cryptoTracker);
 // router.post("/comments",userController.addComment);
 router.post("/generate-token/:uid", generateToken);
+router.get("/testimonials", userController.getAllTestimonials);
+router.get("/tags", userController.getAllTags);
+router.get("/top-content", getTopContent);
 // router.get("/all-users",userController.getAllUsers);
 // router.patch("/:userId",requiresAuth,userController.updateUser);
 // router.get("/:userId",userController.getAUser);

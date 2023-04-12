@@ -9,6 +9,8 @@ const userModel = require("../models/userModel");
 const commentModel = require("../models/commentModel");
 const { default: axios } = require("axios");
 const { CRYPTO_TRACKER_URL } = require("../config/config");
+const testimonialModel = require("../models/testimonials");
+const tagModel = require("../models/tagModel");
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
@@ -118,4 +120,18 @@ exports.cryptoTracker = catchAsync(async (req, res, next) => {
     `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
   );
   return res.status(200).json({ status: true, cryptoData: data.data });
+});
+
+// get all testimonials
+exports.getAllTestimonials = catchAsync(async (req, res, next) => {
+  const testimonials = await testimonialModel.find({ isActive: true });
+  return res
+    .status(200)
+    .json({ status: true, message: "", data: testimonials });
+});
+
+// get all tags
+exports.getAllTags = catchAsync(async (req, res, next) => {
+  const tags = await tagModel.find();
+  return res.status(200).json({ status: true, message: "", data: tags });
 });
