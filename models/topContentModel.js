@@ -4,25 +4,28 @@ const contentModel = require("./contentModel");
 const testimonialModel = require("./testimonials");
 const videoModel = require("./videoModel");
 
-const schema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ["blog", "news", "video", "testimonial"],
-    required: true,
+const schema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["blog", "news", "video", "testimonial"],
+      required: true,
+    },
+    contentId: {
+      type: mongoose.Types.ObjectId,
+      refPath: "onModel",
+    },
+    onModel: {
+      type: String,
+      enum: ["Video", "Content", "Testimonial"],
+    },
+    priority: {
+      type: Number,
+      required: true,
+    },
   },
-  contentId: {
-    type: mongoose.Types.ObjectId,
-    refPath: "onModel",
-  },
-  onModel: {
-    type: String,
-    enum: ["Video", "Content", "Testimonial"],
-  },
-  priority: {
-    type: Number,
-    required: true,
-  },
-});
+  { timestamps: true }
+);
 
 schema.pre("save", async function (next) {
   if (await contentModel.findById(this.contentId)) {

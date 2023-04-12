@@ -77,7 +77,7 @@ exports.deleteTestimonials = catchAsync(async (req, res, next) => {
 exports.allTestimonials = catchAsync(async (req, res, next) => {
   const { _id, duration, status } = req.query;
   if (_id) {
-    const test = await testimonialModel.findById(_id);
+    const test = await topContentModel.findById(_id).populate("contentId");
     if (!test) {
       return next(new AppError("Invalid id", 500));
     }
@@ -88,13 +88,17 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
     return next(new AppError("Invalid duration", 500));
   }
   let filter = {
-    $and: [{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }],
+    $and: [
+      { createdAt: { $gte: firstDay } },
+      { createdAt: { $lt: lastDay } },
+      { type: "testimonial" },
+    ],
   };
   if (status && status !== "all") {
     filter.isActive = status;
   }
 
-  const testimonials = await testimonialModel.find(filter);
+  const testimonials = await topContentModel.find(filter);
 
   return res.status(200).json({
     status: true,
