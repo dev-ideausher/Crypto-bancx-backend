@@ -171,6 +171,9 @@ const getData = (
     }
     if (userType === "User") {
       filter.onModel = "User";
+      if (status && status !== "all") {
+        filter.isApproved = status;
+      }
     }
 
     const data = await model
