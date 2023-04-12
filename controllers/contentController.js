@@ -348,6 +348,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     options: { strictPopulate: false },
   };
   if (type === "testimonial") {
+    filter = { path: "contentId" };
   }
   const topContent = await topContentModel
     .find({ type })
