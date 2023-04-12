@@ -339,16 +339,19 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
       result: JSON.parse(resultExists),
     });
   }
+  let filter = {
+    path: "contentId",
+    populate: {
+      path: "author",
+      select: "name image email",
+    },
+    options: { strictPopulate: false },
+  };
+  if (type === "testimonial") {
+  }
   const topContent = await topContentModel
     .find({ type })
-    .populate({
-      path: "contentId",
-      populate: {
-        path: "author",
-        select: "name image email",
-      },
-      options: { strictPopulate: false }
-    })
+    .populate(filter)
     .limit(5)
     .sort({ priority: 1 });
   await redisClient.SETEX(
