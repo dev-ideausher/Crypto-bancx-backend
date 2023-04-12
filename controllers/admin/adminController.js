@@ -628,14 +628,23 @@ exports.getAllTopContentData = catchAsync(async (req, res, next) => {
 });
 
 // approve blogs
-exports.approveUserBlogs = getData(contentModel, "author", "name image email");
+exports.approveUserBlogs = getData(
+  contentModel,
+  "author",
+  "name image email",
+  "User"
+);
 
 // change blog status
 exports.changeBlogStatus = catchAsync(async (req, res, next) => {
   const { _id } = req.body;
+  const findBlog = await contentModel.findById(_id);
+  if (!findBlog) {
+    return next(new AppError("Invalid blog", 500));
+  }
   const disableData = await contentModel.findOneAndUpdate(
     { _id },
-    { $set: { isApproved: false } }
+    { $set: { isApproved: !findBlog.isApproved } }
   );
   if (!disableData) {
     return next(new AppError("Something went wrong.", 500));

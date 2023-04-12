@@ -139,7 +139,8 @@ const generateDate = (duration) => {
 const getData = (
   model,
   populateFieldKey = "author",
-  populateFieldValue = "name email image"
+  populateFieldValue = "name email image",
+  userType
 ) => {
   return catchAsync(async (req, res, next) => {
     const { type, status, duration, _id } = req.query;
@@ -167,6 +168,9 @@ const getData = (
     }
     if (status && status !== "all") {
       filter.isActive = status;
+    }
+    if (userType === "User") {
+      filter.onModel = "User";
     }
 
     const data = await model
