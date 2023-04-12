@@ -322,7 +322,14 @@ exports.trending = catchAsync(async (req, res, next) => {
 
 // get top content
 exports.getTopContent = catchAsync(async (req, res, next) => {
-  const { type } = req.query;
+  const { type, _id } = req.query;
+  if (_id) {
+    const content = await contentModel.findById(_id).populate("tags");
+    if (!content) {
+      return next(new AppError("Invalid id", 500));
+    }
+    return res.status(200).json({ status: true, message: "", data: content });
+  }
   const resultExists = await redisClient.get(`top-content/${type}`);
   if (resultExists) {
     //await redisClient.quit();
