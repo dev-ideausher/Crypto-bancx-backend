@@ -1,6 +1,7 @@
 const {
   getTopContent,
   addContent,
+  getVideos,
 } = require("../controllers/contentController");
 const {
   requiresAuth,
@@ -20,6 +21,7 @@ router.get("/testimonials", userController.getAllTestimonials);
 router.get("/tags", userController.getAllTags);
 router.post("/add-blog", requiresAuth, addContent);
 router.get("/top-content", getTopContent);
+router.get("/videos",getVideos);
 router.get("/watch-list", requiresAuth, userController.addToWatchList);
 router.get(
   "/watch-list-all",

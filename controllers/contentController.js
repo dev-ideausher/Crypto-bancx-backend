@@ -8,6 +8,7 @@ const favoriteModel = require("../models/favoriteModel");
 const redis = require("redis");
 const redisClient = require("../config/redis");
 const topContentModel = require("../models/topContentModel");
+const videoModel = require("../models/videoModel");
 
 const EXPIRY_TIME = 3600;
 // add content
@@ -338,6 +339,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     return res.status(200).json({ status: true, message: "", data: content });
   }
   const resultExists = await redisClient.get(`top-content/${type}`);
+
   if (resultExists) {
     //await redisClient.quit();
     return res.status(200).json({
@@ -368,4 +370,24 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     JSON.stringify(topContent)
   );
   return res.status(200).json({ status: true, message: "", data: topContent });
+});
+
+
+//get Videos 
+exports.getVideos = catchAsync(async (req, res, next) => {
+  const { _id } = req.query;
+  if (_id) {
+    const content = await videoModel
+      .findById(_id);
+    if (!content) {
+      return next(new AppError("Invalid id", 500));
+    }
+    return res.status(200).json({ status: true, message: "", data: content });
+  }
+
+  const video = await videoModel
+    .find({isActive:true,isApproved:true})
+    .limit(5)
+    .sort({created_at:-1});
+  return res.status(200).json({ status: true, message: "", data: video });
 });
