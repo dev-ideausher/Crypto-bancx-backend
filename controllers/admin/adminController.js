@@ -355,17 +355,6 @@ exports.addVideo = catchAsync(async (req, res, next) => {
   if (!video) {
     return next(new AppError("Something went wrong.", 500));
   }
-  const type = "video"
-  const topContent = await topContentModel
-    .find({ type })
-    .populate(filter)
-    .limit(5)
-    .sort({ priority: 1 });
-  await redisClient.SETEX(
-    `top-content/${type}`,
-    EXPIRY_TIME,
-    JSON.stringify(topContent)
-  );
   return res
     .status(200)
     .json({ status: true, message: "Video has been added", video: video });
