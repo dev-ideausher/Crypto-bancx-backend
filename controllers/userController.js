@@ -181,9 +181,10 @@ exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
   const data = await watchListModel.find({ userId: req.user._id });
   let chains = "";
   data.forEach((coin) => (chains = chains + coin.id + ","));
-  const finalData = await axios.get(
-    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
-  );
+  console.log(chains);
+  const url = `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`;
+  console.log(chains);
+  const finalData = await axios.get(url);
   return res.status(200).json({ status: true, message: "", data: finalData });
 });
 
