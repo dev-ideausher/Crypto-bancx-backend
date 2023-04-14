@@ -178,13 +178,16 @@ exports.addToWatchList = catchAsync(async (req, res, next) => {
 
 // get all from watchList
 exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
+  // const page = 1;
+  const {limit,page} = req.query || {limit:10,page:1};
   const data = await watchListModel.find({ userId: req.user._id });
+  if(data.length == 0){
+    return res.status(400).json({ status: false, message: "no data found", data: "" });
+  }
   let chains = "";
   data.forEach((coin) => (chains = chains + coin.id + ","));
   console.log("Chains",chains);
-  const url = `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=100&page=1&sparkline=false`;
-  // `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false`
-
+  const url = `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false`;
   console.log(url);
   const finalData = await axios.get(url);
   return res.status(200).json({ status: true, message: "", data: finalData.data });
