@@ -24,14 +24,8 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3002",
-      "https://blockhole.vercel.app",
-      "https://blockhole-admin.vercel.app",
-      "https://admin.blockhole.io",
-      "https://blockhole.io",
-      "https://web-blockhole.vercel.app",
-      "https://blockhole-admin-xi.vercel.app",
-      "https://blockhole-admin-dev-ideausher.vercel.app",
-      "https://web-crypto-banc-x-admin.vercel.app"
+      "https://web-crypto-banc-x-admin.vercel.app",
+      "https://web-crypto-banc-x.vercel.app"
     ],
   })
 );
