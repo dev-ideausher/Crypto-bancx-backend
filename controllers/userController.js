@@ -204,6 +204,9 @@ exports.logout = catchAsync(async (req, res, next) => {
 exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
   const { page, limit } = req.query;
 
+
+  
+
   // const {data} = await axios.get(
   //   `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
   // );
@@ -251,6 +254,46 @@ exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
   });
 });
 
+// crypto tracker
+exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
+  const { page, limit } = req.query;
+
+  const { data } = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
+    params: {
+      vs_currency: 'usd',
+      order: 'market_cap_desc',
+      per_page: limit,
+      page: page,
+      sparkline: false,
+      price_change_percentage: '1h,24h,7d',
+      locale: 'en',
+    },
+  });
+
+  
+  const totalPagesGiven = 108
+  const totalLimitGiven = 100
+
+  const totalData = await axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
+  );
+
+  //found from the market cap
+  let totalItems = totalPagesGiven * totalLimitGiven // 10,800
+
+  let remainingVal = 100 - totalData.data.length
+
+  totalItems = totalItems - remainingVal 
+
+  let totalPages = Math.ceil(totalItems / limit)
+
+  return res.status(200).json({
+    status: true, 
+    totalPages:totalPages, 
+    cryptoData: data 
+  });
+});
+
 // exports.cryptoMarketsApiAlternate = catchAsync(async (req, res, next) => {
 //   const { page, limit } = req.query;
 
@@ -295,33 +338,75 @@ exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
 //     });
 // });
 
-exports.graph = catchAsync(async (req, res, next) => {
-  let {id,days,currency,type,from,to,outputType} = req.query
+// exports.graph = catchAsync(async (req, res, next) => {
+//   let {id,days,currency,type,from,to,outputType} = req.query
 
-  let data ={}
+//   let data ={}
 
-  if(outputType == 1){
-    let totalData = await axios.get(
-      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
-    )
-    data.totalData=totalData
-  }else if (outputType == 2){
-    //from = 1682595000
-    //to = 1682596227
-    let marketRange = await axios.get(
-      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
-    )
-    data.marketRange=marketRange
-  }else if (outputType== 3){
-    let ohlc = await axios.get(
+//   if(outputType == 1){
+//     let totalData = await axios.get(
+//       `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
+//     )
+//     data.totalData=totalData
+//   }else if (outputType == 2){
+//     //from = 1682595000
+//     //to = 1682596227
+//     let marketRange = await axios.get(
+//       `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
+//     )
+//     data.marketRange=marketRange
+//   }else if (outputType== 3){
+//     let ohlc = await axios.get(
+//     `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
+//     )
+//     data.ohlc=ohlc
+//   }
+
+//   return res.status(200).json({
+//     status: true, 
+//     cryptoData:  data
+//   });
+// })
+
+
+exports.graphOhlc = catchAsync(async (req, res, next) => {
+  let {id,days,currency} = req.query
+
+  let ohlc = await axios.get(
     `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
-    )
-    data.ohlc=ohlc
-  }
+  )
 
   return res.status(200).json({
     status: true, 
-    cryptoData:  data
+    cryptoData:  ohlc.data
+  });
+})
+
+exports.graphMarketRange = catchAsync(async (req, res, next) => {
+  let {id,from,to,currency} = req.query
+
+  let marketRange = await axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
+  )
+
+  return res.status(200).json({
+    status: true, 
+    cryptoData:  marketRange.data
+  });
+})
+
+
+
+exports.graphMarketChart = catchAsync(async (req, res, next) => {
+  let {id,days,currency} = req.query
+
+  let totalData = await axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
+  )
+
+  return res.status(200).json({
+    status: true, 
+    cryptoData:  totalData.data
   });
 })
 

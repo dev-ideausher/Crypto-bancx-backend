@@ -38,7 +38,11 @@ router.get("/logout", requiresAuth, userController.logout);
 
 
 //--------------------------------------
-router.get("/get-cryptop-market", requiresAuth,userController.cryptoMarketsApi);
-router.get("/graph", requiresAuth,userController.graph);
+router.get("/get-crypto-market", requiresAuth,userController.cryptoMarketsApi);
+router.get("/no-auth/get-crypto-market", userController.cryptoMarketsNoAuth);
+// router.get("/graph", userController.graph);
+router.get("/graph-ohlc", userController.graphOhlc);
+router.get("/graph-chart", userController.graphMarketChart);
+router.get("/graph-range", userController.graphMarketRange);
 
 module.exports = router;
