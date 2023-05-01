@@ -22,15 +22,23 @@ router.get("/tags", userController.getAllTags);
 router.post("/add-blog", requiresAuth, addContent);
 router.get("/top-content", getTopContent);
 router.get("/videos",getVideos);
-router.get("/watch-list", requiresAuth, userController.addToWatchList);
+
+router.post("/watch-list", requiresAuth, userController.addOrRemoveToWatchList);
 router.get(
   "/watch-list-all",
   requiresAuth,
   userController.getAllWatchListCoins
 );
+
 // router.get("/all-users",userController.getAllUsers);
 // router.patch("/:userId",requiresAuth,userController.updateUser);
 router.get("/single", requiresAuth, userController.getAUser);
 router.get("/logout", requiresAuth, userController.logout);
+
+
+
+//--------------------------------------
+router.get("/get-cryptop-market", requiresAuth,userController.cryptoMarketsApi);
+router.get("/graph", requiresAuth,userController.graph);
 
 module.exports = router;

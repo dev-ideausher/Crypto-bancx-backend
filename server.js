@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const app = require('./app');
 const { MONGO_DATABASE_DEV } = require('./config/config');
+mongoose.set('strictQuery', true);
 
 // const {MONGO_DATABASE_DEV} = require("./config/config");
 

@@ -186,9 +186,27 @@ exports.getAllTags = catchAsync(async (req, res, next) => {
 // get latest news
 exports.latestContent = catchAsync(async (req, res, next) => {
   const { page, type, pageSize, contentId } = req.query;
+  console.log("he")
   if (contentId) {
     const dataExists = await redisClient.get(`latest?contentId=${contentId}`);
     if (dataExists) {
+
+      const content = JSON.parse(dataExists);
+
+      await viewsModel.create({
+        type:content.type,
+        itemId:contentId,
+        onModel:"Content"
+      });
+  
+      let contentAfter = await contentModel.findByIdAndUpdate(
+        contentId,
+        {$inc: {ViewCount: 1}},
+        {new: true}
+      );
+    
+      console.log("viewCount",contentAfter.ViewCount)
+
       return res.status(200).json({
         status: true,
         message: "Data found",
@@ -207,6 +225,19 @@ exports.latestContent = catchAsync(async (req, res, next) => {
       JSON.stringify(content?._doc)
     );
     //await redisClient.quit();
+
+    await viewsModel.create({
+      type:content.type,
+      itemId:contentId,
+      onModel:"Content"
+    });
+
+    let contentAfter = await contentModel.findByIdAndUpdate(
+      contentId,
+      {$inc: {ViewCount: 1}},
+      {new: true}
+    );
+  
 
     return res
       .status(200)

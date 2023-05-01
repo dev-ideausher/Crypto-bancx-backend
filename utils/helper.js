@@ -183,35 +183,104 @@ const getData = (
   });
 };
 
-// change order
+// // change order
+// const changeOrder = () => {
+//   return catchAsync(async (req, res, next) => {
+//     const { _id, type, changeType } = req.body;
+//     const current = await topContentModel.findById(_id);
+//     if (!current) {
+//       return next(new AppError("Invalid data", 500));
+//     }
+//     if (current.priority <= 1) {
+//       return next(new AppError("Can not reduce priority any more", 500));
+//     }
+//     const previous = await topContentModel.findOne({
+//       priority: current.priority - 1,
+//       type,
+//     });
+
+//     const updatedData = await Promise.all([
+//       topContentModel.findOneAndUpdate(
+//         { _id: current._id },
+//         { $set: { priority: current.priority - 1 } }
+//       ),
+//       topContentModel.findOneAndUpdate(
+//         { _id: previous._id },
+//         { $set: { priority: previous.priority + 1 } }
+//       ),
+//     ]);
+//     if (updatedData.length < 2) {
+//       return next(new AppError("something went wrong", 500));
+//     }
+//     return res
+//       .status(200)
+//       .json({ status: true, message: "Priority has been updated" });
+//   });
+// };
+
 const changeOrder = () => {
   return catchAsync(async (req, res, next) => {
-    const { _id, type } = req.body;
+    const { _id, type, changeType } = req.body;
     const current = await topContentModel.findById(_id);
     if (!current) {
       return next(new AppError("Invalid data", 500));
     }
-    if (current.priority <= 1) {
+    if (changeType === "+1" && current.priority === 8) {
+      return next(new AppError("Can not increase priority any more", 500));
+    }
+    if (changeType === "-1" && current.priority <= 1) {
       return next(new AppError("Can not reduce priority any more", 500));
     }
-    const previous = await topContentModel.findOne({
-      priority: current.priority - 1,
-      type,
-    });
 
-    const updatedData = await Promise.all([
+    let targetPriority = current.priority;
+    if (changeType === "+1") {
+      targetPriority++;
+    } else if (changeType === "-1") {
+      targetPriority--;
+    } else {
+      return next(new AppError("Invalid change type", 500));
+    }
+
+    let updateOps = [];
+    if (changeType === "+1") {
+      const next = await topContentModel.findOne({
+        priority: targetPriority,
+        type,
+      });
+      if (next) {
+        updateOps.push(
+          topContentModel.findOneAndUpdate(
+            { _id: next._id },
+            { $set: { priority: current.priority } }
+          )
+        );
+      }
+    } else if (changeType === "-1") {
+      const previous = await topContentModel.findOne({
+        priority: targetPriority,
+        type,
+      });
+      if (previous) {
+        updateOps.push(
+          topContentModel.findOneAndUpdate(
+            { _id: previous._id },
+            { $set: { priority: current.priority } }
+          )
+        );
+      }
+    }
+    updateOps.push(
       topContentModel.findOneAndUpdate(
         { _id: current._id },
-        { $set: { priority: current.priority - 1 } }
-      ),
-      topContentModel.findOneAndUpdate(
-        { _id: previous._id },
-        { $set: { priority: previous.priority + 1 } }
-      ),
-    ]);
-    if (updatedData.length < 2) {
+        { $set: { priority: targetPriority } }
+      )
+    );
+
+    const updatedData = await Promise.all(updateOps);
+    if (updatedData.length < updateOps.length) {
       return next(new AppError("something went wrong", 500));
     }
+
     return res
       .status(200)
       .json({ status: true, message: "Priority has been updated" });

@@ -2,6 +2,7 @@ const router = require("express").Router();
 const adminController = require("../controllers/admin/adminController");
 const authController = require("../controllers/authController");
 const adminModel = require("../models/adminModel");
+const adminDashboardController = require("../controllers/admin/adminDashboardController")
 
 router.post("/create", adminController.register);
 router.post("/login", adminController.login);
@@ -201,6 +202,11 @@ router.patch(
   "/change-display-status",
   authController.validateToken(adminModel),
   adminController.changeBlogStatus
+);
+router.get(
+  "/analytics",
+  authController.validateToken(adminModel),
+  adminDashboardController.analytics
 );
 
 module.exports = router;

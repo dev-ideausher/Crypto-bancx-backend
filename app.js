@@ -10,6 +10,7 @@ const storage = memoryStorage();
 const upload = multer({ storage });
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController");
+require('aws-sdk/lib/maintenance_mode_message').suppress = true;
 
 const app = express();
 

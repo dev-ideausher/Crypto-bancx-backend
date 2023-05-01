@@ -145,7 +145,7 @@ exports.getAllTags = catchAsync(async (req, res, next) => {
 });
 
 // add to watchList
-exports.addToWatchList = catchAsync(async (req, res, next) => {
+exports.addOrRemoveToWatchList = catchAsync(async (req, res, next) => {
   const { id } = req.query;
   const isExits = await watchListModel.findOne({ id, userId: req.user._id });
   if (isExits) {
@@ -197,3 +197,131 @@ exports.logout = catchAsync(async (req, res, next) => {
   res.clearCookie("token");
   return res.status(200).json({ status: true });
 });
+
+
+
+// crypto tracker
+exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
+  const { page, limit } = req.query;
+
+  // const {data} = await axios.get(
+  //   `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
+  // );
+  const { data } = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
+    params: {
+      vs_currency: 'usd',
+      order: 'market_cap_desc',
+      per_page: limit,
+      page: page,
+      sparkline: false,
+      price_change_percentage: '1h,24h,7d',
+      locale: 'en',
+    },
+  });
+
+  const watchListedIds = await watchListModel.find({ userId: req.user._id }).distinct('id');
+    const cryptoData = data.map((item) => {
+      const isWishListed = watchListedIds.includes(item.id);
+      return {
+        ...item,
+        isWishListed,
+      };
+    });
+  
+  const totalPagesGiven = 108
+  const totalLimitGiven = 100
+
+  const totalData = await axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
+  );
+
+  //found from the market cap
+  let totalItems = totalPagesGiven * totalLimitGiven // 10,800
+
+  let remainingVal = 100 - totalData.data.length
+
+  totalItems = totalItems - remainingVal 
+
+  let totalPages = Math.ceil(totalItems / limit)
+
+  return res.status(200).json({
+    status: true, 
+    totalPages:totalPages, 
+    cryptoData: cryptoData 
+  });
+});
+
+// exports.cryptoMarketsApiAlternate = catchAsync(async (req, res, next) => {
+//   const { page, limit } = req.query;
+
+//   axios
+//     .get(
+//       `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
+//     )
+//     .then((response) => {
+//       const data = response.data;
+
+//       const totalPagesGiven = 108;
+//       const totalLimitGiven = 100;
+
+//       axios
+//         .get(
+//           `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
+//         )
+//         .then((response) => {
+//           const totalData = response.data;
+
+//           // found from the market cap
+//           let totalItems = totalPagesGiven * totalLimitGiven; // 10,800
+
+//           let remainingVal = 100 - totalData.length;
+
+//           totalItems = totalItems - remainingVal;
+
+//           let totalPages = Math.ceil(totalItems / limit);
+
+//           return res
+//             .status(200)
+//             .json({ status: true, totalPages: totalPages, cryptoData: data.data });
+//         })
+//         .catch((error) => {
+//           console.log('Error:', error);
+//           return res.status(500).json({ status: false, error: error.message });
+//         });
+//     })
+//     .catch((error) => {
+//       console.log('Error:', error);
+//       return res.status(500).json({ status: false, error: error.message });
+//     });
+// });
+
+exports.graph = catchAsync(async (req, res, next) => {
+  let {id,days,currency,type,from,to,outputType} = req.query
+
+  let data ={}
+
+  if(outputType == 1){
+    let totalData = await axios.get(
+      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
+    )
+    data.totalData=totalData
+  }else if (outputType == 2){
+    //from = 1682595000
+    //to = 1682596227
+    let marketRange = await axios.get(
+      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
+    )
+    data.marketRange=marketRange
+  }else if (outputType== 3){
+    let ohlc = await axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
+    )
+    data.ohlc=ohlc
+  }
+
+  return res.status(200).json({
+    status: true, 
+    cryptoData:  data
+  });
+})
+
