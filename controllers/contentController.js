@@ -15,15 +15,30 @@ const EXPIRY_TIME = 3600;
 exports.addContent = catchAsync(async (req, res, next) => {
   const { title, description, thumbnail, content, type, tags } = req.body;
 
-  const newContent = await contentModel.create({
-    title,
-    description,
-    content,
-    author: req.user._id,
-    type,
-    tags,
-    thumbnail,
-  });
+  let newContent
+  if(req.userType == "user"){
+    newContent = await contentModel.create({
+      title,
+      description,
+      content,
+      author: req.user._id,
+      type,
+      tags,
+      thumbnail,
+      featureStatus:"request"
+    });
+  }else{
+    newContent = await contentModel.create({
+      title,
+      description,
+      content,
+      author: req.user._id,
+      type,
+      tags,
+      thumbnail,
+    });
+  }
+
   if (!newContent) return next(new AppError("Couldn't create content", 500));
   return res.status(200).json({
     status: true,

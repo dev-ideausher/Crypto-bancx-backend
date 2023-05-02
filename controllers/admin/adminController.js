@@ -700,9 +700,10 @@ exports.approveOrRejectFeature = catchAsync(async (req, res, next) => {
   }else{
     featureStatus = "rejected";
   }
-  let contentModel = await contentModel.findByIdAndUpdate(featureId,{
-    featureStatus: featureStatus
+  let featureRequests = await contentModel.findByIdAndUpdate(featureId,{
+    featureStatus: featureStatus,
+    isApproved: status,
   },{new:true})
 
-  return res.status(200).json({ status: true, message:"updated", featureRequests: contentModel });
+  return res.status(200).json({ status: true, message:"updated", featureRequests: featureRequests });
 })

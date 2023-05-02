@@ -22,10 +22,13 @@ exports.checkRole = (model) => {
     if (!token) return next(new AppError("Token is not present.", 400));
     const { userId } = jwt.verify(token, JWT_SECRETE_KEY);
     let user;
-    if (await userModel.findById(userId))
+    if (await userModel.findById(userId)){
       user = await userModel.findById(userId);
-    else if (await adminModel.findById(userId))
+      req.userType = "user";
+    }else if (await adminModel.findById(userId)){
       user = await adminModel.findById(userId);
+      req.userType = "admin";
+    }
     if (!user) return next(new AppError("Invalid token", 400));
     req.user = user;
     next();
