@@ -111,7 +111,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
             select:['name', 'email', 'image']
             }
         })
-    .sort({ priority: -1 })
+    .sort({ priority: 1 })
   
     return res.status(200).json({
       status: true,
