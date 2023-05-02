@@ -12,6 +12,8 @@ const { CRYPTO_TRACKER_URL } = require("../config/config");
 const testimonialModel = require("../models/testimonials");
 const tagModel = require("../models/tagModel");
 const watchListModel = require("../models/watchlistModel");
+
+const marketCapModel = require("../models/marketCapModel")
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
@@ -204,25 +206,22 @@ exports.logout = catchAsync(async (req, res, next) => {
 exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
   const { page, limit } = req.query;
 
+  const totalPagesGiven = 108
+  const totalLimitGiven = 100
 
-  
-
-  // const {data} = await axios.get(
-  //   `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
-  // );
-  const { data } = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
+  axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
     params: {
       vs_currency: 'usd',
       order: 'market_cap_desc',
-      per_page: limit,
+      per_page: totalLimitGiven,
       page: page,
       sparkline: false,
       price_change_percentage: '1h,24h,7d',
       locale: 'en',
     },
-  });
-
-  const watchListedIds = await watchListModel.find({ userId: req.user._id }).distinct('id');
+  }).then(async (response) => {
+    const data = response.data;
+    const watchListedIds = await watchListModel.find({ userId: req.user._id }).distinct('id');
     const cryptoData = data.map((item) => {
       const isWishListed = watchListedIds.includes(item.id);
       return {
@@ -231,112 +230,119 @@ exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
       };
     });
   
-  const totalPagesGiven = 108
-  const totalLimitGiven = 100
+    console.log("data")
 
-  const totalData = await axios.get(
-    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
-  );
+    // store the data in the database
+    const marketCap = await marketCapModel.create({
+      page,
+      data: data,
+    });
+    console.log("data1111",marketCap._id)
 
-  //found from the market cap
-  let totalItems = totalPagesGiven * totalLimitGiven // 10,800
+    return res.status(200).json({
+      status: true, 
+      totalPages:totalPagesGiven, 
+      cryptoData: cryptoData 
+    });
 
-  let remainingVal = 100 - totalData.data.length
+  }).catch(async (error) => {
 
-  totalItems = totalItems - remainingVal 
+    console.log("def")
+    // check if there is any stored data for the given page and limit
+    const cachedData = await marketCapModel.find({page:page}).sort({ createdAt: -1 }).limit(1).lean();
+    if (cachedData) {
+      const watchListedIds = await watchListModel.find({ userId: req.user._id }).distinct('id');
+      const updatedData = cachedData[0].data.map((item) => {
+        const isWishListed = watchListedIds.includes(item.id);
+        return {
+          ...item,
+          isWishListed,
+        };
+      });
 
-  let totalPages = Math.ceil(totalItems / limit)
-
-  return res.status(200).json({
-    status: true, 
-    totalPages:totalPages, 
-    cryptoData: cryptoData 
+      return res.status(200).json({
+        status: true, 
+        totalPages: totalPagesGiven, 
+        cryptoData: updatedData
+      });
+    }else{
+      console.log("no cachedDAta")
+      return res.status(200).json({
+        status: true, 
+        totalPages: totalPagesGiven, 
+        cryptoData: []
+      });
+    }
   });
 });
+
+  // const totalPagesGiven = 108
+  // const totalLimitGiven = 100
+  // const totalData = await axios.get(
+  //   `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
+  // );
+  // //found from the market cap
+  // let totalItems = totalPagesGiven * totalLimitGiven // 10,800
+  // let remainingVal = 100 - totalData.data.length
+  // totalItems = totalItems - remainingVal 
+  // let totalPages = Math.ceil(totalItems / limit)
 
 // crypto tracker
 exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
   const { page, limit } = req.query;
-
-  const { data } = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
-    params: {
-      vs_currency: 'usd',
-      order: 'market_cap_desc',
-      per_page: limit,
-      page: page,
-      sparkline: false,
-      price_change_percentage: '1h,24h,7d',
-      locale: 'en',
-    },
-  });
-
-  
+  // limit =100
   const totalPagesGiven = 108
   const totalLimitGiven = 100
+  axios.get(
+    `${CRYPTO_TRACKER_URL}/coins/markets`, {
+      params: {
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: totalLimitGiven,
+        page: page,
+        sparkline: false,
+        price_change_percentage: '1h,24h,7d',
+        locale: 'en',
+      },
+    }).then(async (response) => {
+      const data = response.data;
+      console.log("data")
 
-  const totalData = await axios.get(
-    `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
-  );
+      // store the data in the database
+      const marketCap = await marketCapModel.create({
+        page,
+        data: data,
+      });
+      console.log("data1111",marketCap)
 
-  //found from the market cap
-  let totalItems = totalPagesGiven * totalLimitGiven // 10,800
+      return res.status(200).json({
+        status: true, 
+        totalPages:totalPagesGiven, 
+        cryptoData: data 
+      });
 
-  let remainingVal = 100 - totalData.data.length
-
-  totalItems = totalItems - remainingVal 
-
-  let totalPages = Math.ceil(totalItems / limit)
-
-  return res.status(200).json({
-    status: true, 
-    totalPages:totalPages, 
-    cryptoData: data 
-  });
+    }).catch(async (error) => {
+      console.log("def")
+        // check if there is any stored data for the given page and limit
+        const cachedData = await marketCapModel.find({page:page}).sort({ createdAt: -1 }).limit(1).lean();
+        if (cachedData) {
+          console.log("cachedDAta",cachedData)
+          return res.status(200).json({
+            status: true, 
+            totalPages: totalPagesGiven, 
+            cryptoData: cachedData[0].data 
+          });
+        }else{
+          console.log("no cachedDAta")
+          return res.status(200).json({
+            status: true, 
+            totalPages: totalPagesGiven, 
+            cryptoData: []
+          });
+        }
+    });
 });
 
-// exports.cryptoMarketsApiAlternate = catchAsync(async (req, res, next) => {
-//   const { page, limit } = req.query;
-
-//   axios
-//     .get(
-//       `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=${page}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
-//     )
-//     .then((response) => {
-//       const data = response.data;
-
-//       const totalPagesGiven = 108;
-//       const totalLimitGiven = 100;
-
-//       axios
-//         .get(
-//           `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
-//         )
-//         .then((response) => {
-//           const totalData = response.data;
-
-//           // found from the market cap
-//           let totalItems = totalPagesGiven * totalLimitGiven; // 10,800
-
-//           let remainingVal = 100 - totalData.length;
-
-//           totalItems = totalItems - remainingVal;
-
-//           let totalPages = Math.ceil(totalItems / limit);
-
-//           return res
-//             .status(200)
-//             .json({ status: true, totalPages: totalPages, cryptoData: data.data });
-//         })
-//         .catch((error) => {
-//           console.log('Error:', error);
-//           return res.status(500).json({ status: false, error: error.message });
-//         });
-//     })
-//     .catch((error) => {
-//       console.log('Error:', error);
-//       return res.status(500).json({ status: false, error: error.message });
-//     });
-// });
 
 // exports.graph = catchAsync(async (req, res, next) => {
 //   let {id,days,currency,type,from,to,outputType} = req.query
