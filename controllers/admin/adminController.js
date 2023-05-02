@@ -346,38 +346,38 @@ exports.changeCommentStatus = catchAsync(async (req, res, next) => {
 exports.searchNews = searchNewsOrVideos(contentModel);
 exports.searchVideos = searchNewsOrVideos(videoModel);
 exports.changeContentStatus = disableFunction(contentModel);
-exports.changeVideoStatus = disableFunction(videoModel);
+// exports.changeVideoStatus = disableFunction(videoModel);
 
-// add video
-exports.addVideo = catchAsync(async (req, res, next) => {
-  const video = await videoModel.create({ ...req.body, author: req.user._id });
+// // add video
+// exports.addVideo = catchAsync(async (req, res, next) => {
+//   const video = await videoModel.create({ ...req.body, author: req.user._id });
 
-  if (!video) {
-    return next(new AppError("Something went wrong.", 500));
-  }
-  return res
-    .status(200)
-    .json({ status: true, message: "Video has been added", video: video });
-});
+//   if (!video) {
+//     return next(new AppError("Something went wrong.", 500));
+//   }
+//   return res
+//     .status(200)
+//     .json({ status: true, message: "Video has been added", video: video });
+// });
 
-// edit video
-exports.editVideo = catchAsync(async (req, res, next) => {
-  const { _id } = req.body;
+// // edit video
+// exports.editVideo = catchAsync(async (req, res, next) => {
+//   const { _id } = req.body;
 
-  const updatedVideo = await videoModel.findOneAndUpdate(
-    { _id },
-    { $set: req.body },
-    { new: true }
-  );
-  if (!updatedVideo) {
-    return next(new AppError("Something went wrong", 500));
-  }
-  return res.status(200).json({
-    status: true,
-    message: "Video has been Updated.",
-    video: updatedVideo,
-  });
-});
+//   const updatedVideo = await videoModel.findOneAndUpdate(
+//     { _id },
+//     { $set: req.body },
+//     { new: true }
+//   );
+//   if (!updatedVideo) {
+//     return next(new AppError("Something went wrong", 500));
+//   }
+//   return res.status(200).json({
+//     status: true,
+//     message: "Video has been Updated.",
+//     video: updatedVideo,
+//   });
+// });
 
 // delete blogs
 exports.deleteBlogs = catchAsync(async (req, res, next) => {
@@ -504,18 +504,18 @@ exports.searchBlogs = catchAsync(async (req, res, next) => {
 // get all blogs or news
 exports.getNewsOrBlogs = getData(contentModel);
 
-// get videos
-exports.getVideos = getData(videoModel);
+// // get videos
+// exports.getVideos = getData(videoModel);
 
-// delete video
-exports.deleteVideo = catchAsync(async (req, res, next) => {
-  const { _id } = req.query;
-  const deleted = await videoModel.deleteOne({ _id });
-  if (!deleted || !deleted.acknowledged || deleted.deletedCount !== 1) {
-    return next(new AppError("Something went wrong,", 500));
-  }
-  return res.status(200).json({ status: true, message: "Video deleted" });
-});
+// // delete video
+// exports.deleteVideo = catchAsync(async (req, res, next) => {
+//   const { _id } = req.query;
+//   const deleted = await videoModel.deleteOne({ _id });
+//   if (!deleted || !deleted.acknowledged || deleted.deletedCount !== 1) {
+//     return next(new AppError("Something went wrong,", 500));
+//   }
+//   return res.status(200).json({ status: true, message: "Video deleted" });
+// });
 
 // create user
 exports.createNewUser = catchAsync(async (req, res, next) => {
@@ -660,3 +660,49 @@ exports.logout = catchAsync(async (req, res, next) => {
   res.clearCookie("token");
   return res.status(200).json({ status: true });
 });
+
+// get all feature Requests
+exports.allfeatureRequests = catchAsync(async (req, res, next) => {
+
+  const {duration, status } = req.query;
+
+  const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
+  if (!isSuccess) {
+    return next(new AppError("Invalid duration", 500));
+  }
+
+  let filter = {
+    $and: [
+      { createdAt: { $gte: firstDay } },
+      { createdAt: { $lt: lastDay } },
+      { type: "blog" },
+    ],
+  };
+
+  if (status && status !== "all") {
+    filter.featureStatus = status;
+  }
+
+  let featureRequests = await contentModel.find(filter).populate("author", "name email image").sort({createdAt:-1})
+
+  return res.status(200).json({ status: true, featureRequests: featureRequests });
+});
+
+
+// update feature Requests
+exports.approveOrRejectFeature = catchAsync(async (req, res, next) => {
+  const featureId = req.params.id
+  const {status} = req.body;
+
+  let featureStatus
+  if(status==true){
+    featureStatus = "published";
+  }else{
+    featureStatus = "rejected";
+  }
+  let contentModel = await contentModel.findByIdAndUpdate(featureId,{
+    featureStatus: featureStatus
+  },{new:true})
+
+  return res.status(200).json({ status: true, message:"updated", featureRequests: contentModel });
+})

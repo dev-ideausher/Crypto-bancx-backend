@@ -52,6 +52,10 @@ const schema = new mongoose.Schema(
       ref: "Tag",
       validate: [tagSizeLimit, "tags should be unique and less than 5"],
     },
+    featureStatus:{
+      type: String,
+      enum:["published","request","rejected"]
+    },
     isApproved: {
       type: Boolean,
     },

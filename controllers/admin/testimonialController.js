@@ -100,7 +100,7 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
     filter.isActive = status;
   }
 
-  const testimonials = await topContentModel.find(filter).populate("contentId");
+  const testimonials = await topContentModel.find(filter).populate("contentId").sort({ priority: -1 });
 
   return res.status(200).json({
     status: true,

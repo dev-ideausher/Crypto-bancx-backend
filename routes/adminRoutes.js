@@ -3,6 +3,7 @@ const adminController = require("../controllers/admin/adminController");
 const authController = require("../controllers/authController");
 const adminModel = require("../models/adminModel");
 const adminDashboardController = require("../controllers/admin/adminDashboardController")
+const adminVideoController = require("../controllers/admin/videoController")
 
 router.post("/create", adminController.register);
 router.post("/login", adminController.login);
@@ -96,7 +97,7 @@ router.get(
 router.get(
   "/videos",
   authController.validateToken(adminModel),
-  adminController.getVideos
+  adminVideoController.allVideos
 );
 router.get(
   "/search-news",
@@ -121,7 +122,7 @@ router.patch(
 router.patch(
   "/change-video-status",
   authController.validateToken(adminModel),
-  adminController.changeVideoStatus
+  adminVideoController.changeVideoStatus
 );
 router.post(
   "/add-user",
@@ -181,17 +182,17 @@ router.get(
 router.patch(
   "/edit-video",
   authController.validateToken(adminModel),
-  adminController.editVideo
+  adminVideoController.editVideo
 );
 router.delete(
   "/delete-video",
   authController.validateToken(adminModel),
-  adminController.deleteVideo
+  adminVideoController.deleteVideo
 );
 router.post(
   "/add-video",
   authController.validateToken(adminModel),
-  adminController.addVideo
+  adminVideoController.addVideo
 );
 router.get(
   "/user-blogs",
@@ -207,6 +208,18 @@ router.get(
   "/analytics",
   authController.validateToken(adminModel),
   adminDashboardController.analytics
+);
+
+router.get(
+  "/feature-requests",
+  authController.validateToken(adminModel),
+  adminController.allfeatureRequests
+);
+
+router.patch(
+  "/feature-requests/:id",
+  authController.validateToken(adminModel),
+  adminController.approveOrRejectFeature
 );
 
 module.exports = router;
