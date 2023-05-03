@@ -1,19 +1,8 @@
-const adminModel = require("../../models/adminModel");
 const catchAsync = require("../../utils/catchAsync");
-const bcrypt = require("bcryptjs");
 const AppError = require("../../utils/appError");
 const {
-  generateJWTToken,
-  isDate,
   disableFunction,
-  searchNewsOrVideos,
-  getData,
   generateDate,
-  changeOrder,
-  setTop,
-  permanentDeleteTopContent,
-  addToTopContent,
-  decreaseContentOrder,
 } = require("../../utils/helper");
 
 const videoModel = require("../../models/videoModel");
@@ -111,7 +100,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
             select:['name', 'email', 'image']
             }
         })
-    .sort({ priority: 1 })
+    .sort({ priority: -1 })
   
     return res.status(200).json({
       status: true,
@@ -122,14 +111,51 @@ exports.allVideos = catchAsync(async (req, res, next) => {
 
 
 exports.changeVideoStatus = disableFunction(videoModel);
-
-  // delete video
+  
+//delete video
 exports.deleteVideo = catchAsync(async (req, res, next) => {
     const { _id } = req.query;
-    const deleted = await videoModel.deleteOne({ _id });
-    if (!deleted || !deleted.acknowledged || deleted.deletedCount !== 1) {
-      return next(new AppError("Something went wrong,", 500));
+
+    const deletedVideoTop = await topContentModel.findOne({contentId: _id,type:"video"});
+    if(!deletedVideoTop){
+      return next(new AppError("invalid _id", 500));
     }
-    return res.status(200).json({ status: true, message: "Video deleted" });
-  });
+    const deletedVideo = await videoModel.findById(_id)
+    if(!deletedVideo){
+      return next(new AppError("invalid _id", 500));
+    };
+
+    // Get the priority of the document that is being deleted
+    const deletedPriority = deletedVideoTop.priority;
   
+    // Delete the video
+    const deleteVideo = await videoModel.deleteOne({ _id: _id });
+  
+    if (!deleteVideo.acknowledged || deleteVideo.deletedCount !== 1){
+        return next(new AppError("Something went wrong", 500));
+    }
+  
+    // Update the priorities of the remaining documents
+    const updatePromises = [];
+  
+    // Decrease the values
+    updatePromises.push(
+      topContentModel.updateMany(
+        { type:"video", priority: { $gt: deletedPriority } },
+        { $inc: { priority: -1 } }
+      )
+    );
+  
+    await Promise.all(updatePromises);
+  
+    // Delete the document from topContentModel
+    const deleteFromTopModel = await topContentModel.deleteOne({
+      contentId: _id,
+    });
+  
+    return res.status(200).json({
+      status: true,
+      message: "Video deleted",
+      video: deleteVideo,
+    });
+  });

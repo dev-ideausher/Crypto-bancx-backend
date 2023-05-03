@@ -56,22 +56,52 @@ exports.updateTestimonials = catchAsync(async (req, res, next) => {
   });
 });
 
-// delete testimonial
 exports.deleteTestimonials = catchAsync(async (req, res, next) => {
   const { _id } = req.query;
+
+  // Get the priority of the document that is being deleted
+  const deletedTestimonialtop = await topContentModel.findOne({contentId: _id,type:"testimonial"});
+  if(!deletedTestimonialtop){
+    return next(new AppError("invalid _id", 500));
+  }
+  const deletedTestimonial = await testimonialModel.findById(_id)
+  if(!deletedTestimonial){
+    return next(new AppError("invalid _id", 500));
+  };
+  const deletedPriority = deletedTestimonialtop.priority;
+
+  // Delete the testimonial
   const deleteTestimonial = await testimonialModel.deleteOne({ _id: _id });
 
-  if (!deleteTestimonial.acknowledged || deleteTestimonial.deletedCount !== 1)
-    return next(new AppError("Something went wrong", 500));
+  if (!deleteTestimonial.acknowledged || deleteTestimonial.deletedCount !== 1){
+      return next(new AppError("Something went wrong", 500));
+  }
+
+  // Update the priorities of the remaining documents
+  const updatePromises = [];
+
+  // Decrease the values
+  updatePromises.push(
+    topContentModel.updateMany(
+      { type:"testimonial",priority: { $gt: deletedPriority } },
+      { $inc: { priority: -1 } }
+    )
+  );
+
+  await Promise.all(updatePromises);
+
+  // Delete the document from topContentModel
   const deleteFromTopModel = await topContentModel.deleteOne({
     contentId: _id,
   });
+
   return res.status(200).json({
     status: true,
     message: "Testimonial deleted",
     testimonial: deleteTestimonial,
   });
 });
+
 
 // get all testimonials
 exports.allTestimonials = catchAsync(async (req, res, next) => {
