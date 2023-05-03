@@ -624,7 +624,7 @@ exports.getAllTopContentData = catchAsync(async (req, res, next) => {
   const data = await topContentModel
     .find({ type: req.query.type })
     .populate({ path: "contentId", populate: { path: "author" } })
-    .sort({ priority: 1 })
+    .sort({ priority: -1 })
     .limit(5);
   return res.status(200).json({ status: true, data: data });
 });

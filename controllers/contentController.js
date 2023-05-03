@@ -409,7 +409,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     .find({ type })
     .populate(filter)
     .limit(5)
-    .sort({ priority: 1 });
+    .sort({ priority: -1 });
   await redisClient.SETEX(
     `top-content/${type}`,
     EXPIRY_TIME,
