@@ -222,10 +222,12 @@ const changeOrder = () => {
   return catchAsync(async (req, res, next) => {
     const { _id, type, changeType } = req.body;
     const current = await topContentModel.findById(_id);
+    const allTopContent = await topContentModel.find({type:"testimonial"}).count();
     if (!current) {
       return next(new AppError("Invalid data", 500));
     }
-    if (changeType === "+1" && current.priority === 8) {
+    console.log(allTopContent)
+    if (changeType === "+1" && current.priority >= allTopContent) {
       return next(new AppError("Can not increase priority any more", 500));
     }
     if (changeType === "-1" && current.priority <= 1) {
