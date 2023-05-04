@@ -1,13 +1,28 @@
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 
+// const schema = new mongoose.Schema(
+//   {
+//     page:{
+//         type:Number,
+//         required:true
+//     },
+//     data:[Object]
+//   },
+//   { timestamps: true }
+// );
+
 const schema = new mongoose.Schema(
   {
-    page:{
+    order:{
         type:Number,
         required:true
     },
-    data:[Object]
+    marketCapId:{
+        type:String,
+        required:true
+    },
+    data:Object
   },
   { timestamps: true }
 );

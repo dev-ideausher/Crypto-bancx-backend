@@ -8,13 +8,17 @@ const {
 const videoModel = require("../../models/videoModel");
 
 const topContentModel = require("../../models/topContentModel");
+const redisClient = require("../../config/redis");
+
+const EXPIRY_TIME = 3600;
 
 
 
 // add video
 exports.addVideo = catchAsync(async (req, res, next) => {
     const newVideo = await videoModel.create({ ...req.body, author: req.user._id });
-  
+    const type = "video"
+
     if (!newVideo) {
       return next(new AppError("Something went wrong.", 500));
     }
@@ -32,7 +36,28 @@ exports.addVideo = catchAsync(async (req, res, next) => {
     if (!saveToTopContentModel) {
       return next("Unable to save to top model", 500);
     }
+
+    let filter = {
+        path: "contentId",
+        populate: {
+          path: "author",
+          select: "name image email",
+        },
+        options: { strictPopulate: false },
+    };
+      
+    const topContent = await topContentModel
+        .find({ type })
+        .populate(filter)
+        .limit(5)
+        .sort({ priority: -1 });
   
+    await redisClient.SETEX(
+       `top-content/${type}`,
+       EXPIRY_TIME,
+       JSON.stringify(topContent)
+    );
+
     return res.status(200).json({
       status: true,
       message: "video added",

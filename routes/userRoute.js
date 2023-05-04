@@ -8,6 +8,7 @@ const {
   generateToken,
 } = require("../controllers/firebaseController");
 const userController = require("../controllers/userController");
+const marketCapController = require("../controllers/marketCapContgroller");
 const router = require("express").Router();
 
 router.post("/onboarding", requiresAuth, userController.userOnboarding);
@@ -38,11 +39,11 @@ router.get("/logout", requiresAuth, userController.logout);
 
 
 //--------------------------------------
-router.get("/get-crypto-market", requiresAuth,userController.cryptoMarketsApi);
-router.get("/no-auth/get-crypto-market", userController.cryptoMarketsNoAuth);
+router.get("/get-crypto-market", requiresAuth,marketCapController.cryptoMarketsApi);
+router.get("/no-auth/get-crypto-market", marketCapController.cryptoMarketsNoAuth);
 // router.get("/graph", userController.graph);
-router.get("/graph-ohlc", userController.graphOhlc);
-router.get("/graph-chart", userController.graphMarketChart);
-router.get("/graph-range", userController.graphMarketRange);
+router.get("/graph-ohlc", marketCapController.graphOhlc);
+router.get("/graph-chart", marketCapController.graphMarketChart);
+router.get("/graph-range", marketCapController.graphMarketRange);
 
 module.exports = router;
