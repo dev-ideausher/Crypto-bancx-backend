@@ -12,6 +12,7 @@ const { CRYPTO_TRACKER_URL } = require("../config/config");
 const testimonialModel = require("../models/testimonials");
 const tagModel = require("../models/tagModel");
 const watchListModel = require("../models/watchlistModel");
+const marketCapModel = require("../models/marketCapModel")
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
@@ -176,22 +177,52 @@ exports.addOrRemoveToWatchList = catchAsync(async (req, res, next) => {
     .json({ status: true, message: "Successfully added to watch list" });
 });
 
-// get all from watchList
+// // get all from watchList
+// exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
+//   // const page = 1;
+//   const {limit,page} = req.query;
+//   const data = await watchListModel.find({ userId: req.user._id });
+//   if(data.length == 0){
+//     return res.status(400).json({ status: false, message: "no data found", data: "" });
+//   }
+//   let chains = "";
+//   data.forEach((coin) =>{
+//     const finalData = await marketCapModel.find({marketCapId:coin.id})
+//   });
+ 
+//   // console.log("Chains",chains);
+//   // const url = `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=${limit || 10}&page=${page || 1}&sparkline=false`;
+//   // console.log(url);
+//   // const finalData = await axios.get(url);
+//   return res.status(200).json({ status: true, message: "", data: finalData.data });
+// });
+
+
+//get all watchlist coins
 exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
-  // const page = 1;
-  const {limit,page} = req.query;
-  const data = await watchListModel.find({ userId: req.user._id });
-  if(data.length == 0){
+  const { limit = 10, page = 1 } = req.query;
+
+  const watchListCoins = await watchListModel
+    .find({ userId: req.user._id })
+    .select('id');
+
+  if (watchListCoins.length === 0) {
     return res.status(400).json({ status: false, message: "no data found", data: "" });
   }
-  let chains = "";
-  data.forEach((coin) => (chains = chains + coin.id + ","));
-  console.log("Chains",chains);
-  const url = `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&ids=${chains}&order=market_cap_desc&per_page=${limit || 10}&page=${page || 1}&sparkline=false`;
-  console.log(url);
-  const finalData = await axios.get(url);
-  return res.status(200).json({ status: true, message: "", data: finalData.data });
+
+  const coinIds = watchListCoins.map((coin) => coin.id);
+  const count = await marketCapModel.countDocuments({ marketCapId: { $in: coinIds } });
+  const totalPages = Math.ceil(count / limit);
+  const skip = (page - 1) * limit;
+  const finalData = await marketCapModel.find({ marketCapId: { $in: coinIds } })
+    .skip(skip)
+    .limit(limit)
+    .select('data');
+  const data = finalData.map((coin)=> coin.data)  
+
+  return res.status(200).json({ status: true, message: "", data: data, totalPages: totalPages });
 });
+
 
 exports.logout = catchAsync(async (req, res, next) => {
   res.clearCookie("token");
