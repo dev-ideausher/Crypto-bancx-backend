@@ -673,11 +673,10 @@ exports.allfeatureRequests = catchAsync(async (req, res, next) => {
   }
 
   let filter = {
-    $and: [
-      { createdAt: { $gte: firstDay } },
-      { createdAt: { $lt: lastDay } },
-      { type: "blog" },
-    ],
+      createdAt: { $gte: firstDay },
+      createdAt: { $lt: lastDay },
+      type: "blog",
+      onModel:"User",
   };
 
   if (status && status !== "all") {
@@ -708,3 +707,29 @@ exports.approveOrRejectFeature = catchAsync(async (req, res, next) => {
 
   return res.status(200).json({ status: true, message:"updated", featureRequests: featureRequests });
 })
+
+exports.deleteFeatureRequest = catchAsync(async (req, res, next) => {
+  const {_id} = req.query
+
+  const featureRequestCheck = await contentModel.findById(_id)
+  if(!featureRequestCheck){
+    return next(new AppError("invalid _id", 500));
+  };
+
+  // Delete the feature Request
+  const deleteFeatureRequest = await contentModel.deleteOne({ _id: _id });
+
+  if (!deleteFeatureRequest.acknowledged || deleteFeatureRequest.deletedCount !== 1){
+      return next(new AppError("Something went wrong", 500));
+  }
+
+  return res.status(200).json({ status: true, message:"deleted", featureRequests: deleteFeatureRequest });
+})
+
+exports.getSingleFeatureRequest = catchAsync(async (req, res, next) => {
+  const id = req.params.id
+
+  let featureRequest = await contentModel.findById(id).populate("author", "name email image")
+
+  return res.status(200).json({ status: true, featureRequest: featureRequest });
+});

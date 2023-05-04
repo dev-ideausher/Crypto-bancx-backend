@@ -222,4 +222,17 @@ router.patch(
   adminController.approveOrRejectFeature
 );
 
+router.delete(
+  "/feature-request",
+  authController.validateToken(adminModel),
+  adminController.deleteFeatureRequest
+);
+
+router.get(
+  "/feature-request/:id",
+  authController.validateToken(adminModel),
+  adminController.getSingleFeatureRequest
+);
+
+
 module.exports = router;
