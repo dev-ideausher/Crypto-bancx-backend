@@ -6,7 +6,7 @@ const watchListModel = require("../models/watchlistModel");
 const marketCapModel = require("../models/marketCapModel")
 
 
-const MAX_MARKET_LIMIT = 10704
+const MAX_MARKET_LIMIT = 250
 
 // crypto tracker
 exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
