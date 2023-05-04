@@ -469,7 +469,7 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
 exports.searchBlogs = catchAsync(async (req, res, next) => {
   const { status, duration, _id } = req.query;
   if (_id) {
-    const blog = await contentModel.findOne({ _id }).populate("tags");
+    const blog = await contentModel.findOne({ _id }).populate("tags").populate("author", "name email image");
     if (!blog) {
       return next(new AppError("Invalid content", 500));
     }
@@ -490,6 +490,7 @@ exports.searchBlogs = catchAsync(async (req, res, next) => {
     contentModel
       .find(filter)
       .populate("author", "name email image")
+      .populate("tags")
       .sort({ createdAt: -1 }),
     (await contentModel.find(filter)).length,
   ]);
@@ -729,7 +730,7 @@ exports.deleteFeatureRequest = catchAsync(async (req, res, next) => {
 exports.getSingleFeatureRequest = catchAsync(async (req, res, next) => {
   const id = req.params.id
 
-  let featureRequest = await contentModel.findById(id).populate("author", "name email image")
+  let featureRequest = await contentModel.findById(id).populate("author", "name email image").populate("tags")
 
   return res.status(200).json({ status: true, featureRequest: featureRequest });
 });

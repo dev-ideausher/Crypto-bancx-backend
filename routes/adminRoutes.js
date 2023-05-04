@@ -109,11 +109,11 @@ router.get(
   authController.validateToken(adminModel),
   adminController.searchVideos
 );
-router.get(
-  "/search-blog",
-  authController.validateToken(adminModel),
-  adminController.searchBlogs
-);
+// router.get(
+//   "/search-blog",
+//   authController.validateToken(adminModel),
+//   adminController.searchBlogs
+// );
 router.patch(
   "/change-content-status",
   authController.validateToken(adminModel),
