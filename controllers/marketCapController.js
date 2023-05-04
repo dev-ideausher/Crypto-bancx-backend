@@ -55,13 +55,76 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
   });
 })
 
-const marketCapController = async () => {
+// const marketCapController = async () => {
+
+//     const totalLimitGiven = 250;//200 vvvvv
+//     // const totalPages = 43;
+//     let page = 1;
+//     let order = 0;
+  
+//     const bulkOps = [];
+//     while (page) {
+//       try {
+//         const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
+//           params: {
+//             vs_currency: 'usd',
+//             order: 'market_cap_desc',
+//             per_page: totalLimitGiven,
+//             page: page,
+//             sparkline: false,
+//             price_change_percentage: '1h,24h,7d',
+//             locale: 'en',
+//           },
+//         });
+  
+//         const marketCapData = response.data.map((item) => ({
+//           order: ++order,
+//           marketCapId: item.id,
+//           data: item,
+//         }));
+  
+//         // Upsert the data
+//         await Promise.all(
+//           marketCapData.map(async (item) => {
+//             await marketCapModel.findOneAndUpdate(
+//               { marketCapId: item.marketCapId },
+//               item,
+//               { upsert: true }
+//             );
+//           })
+//         );
+  
+//         // if (page % 6 === 0) {
+//         //   await new Promise((resolve) => {
+//         //     setTimeout(resolve, 60 * 1000);
+//         //   });
+//         // }
+  
+//         // Move to the next page
+//         // console.log(page)
+//         // if (page == 43){
+//         //   console.log(finished)
+//         // }
+//         // page++;
+//       } catch (error) {
+//         // Wait for 1 minute before retrying the same page
+//         console.log(error.response.status,error.response.statusText)
+//         await new Promise((resolve) => {
+//           setTimeout( resolve, 1 * 60 * 1000);
+//         });
+//       }
+//     }
+//   };
+
+  const marketCapController = async () => {
     const totalLimitGiven = 250;
-    const totalPages = 43;
+    const MAX_MARKET_LIMIT= 250;
     let page = 1;
     let order = 0;
   
-    while (page <= totalPages) {
+    let bulkOps = [];
+    
+    while (page) {
       try {
         const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
           params: {
@@ -81,16 +144,15 @@ const marketCapController = async () => {
           data: item,
         }));
   
-        // Upsert the data
-        await Promise.all(
-          marketCapData.map(async (item) => {
-            await marketCapModel.findOneAndUpdate(
-              { marketCapId: item.marketCapId },
-              item,
-              { upsert: true }
-            );
-          })
-        );
+        marketCapData.forEach((item) => {
+          bulkOps.push({
+            updateOne: {
+              filter: { marketCapId: item.marketCapId },
+              update: item,
+              upsert: true,
+            },
+          });
+        });
   
         // if (page % 6 === 0) {
         //   await new Promise((resolve) => {
@@ -100,22 +162,34 @@ const marketCapController = async () => {
   
         // Move to the next page
         console.log(page)
-        if (page == 43){
-          console.log(finished)
-        }
-        page++;
+        // if (page == 43){
+        //   console.log(finished)
+        // }
+        // page++;
       } catch (error) {
-        // Wait for 1 minute before retrying the same page
-        console.log(error.response.status,error.response.statusText)
+        console.log(error.response.status, error.response.statusText);
         await new Promise((resolve) => {
-          setTimeout( resolve, 1 * 60 * 1000);
+          setTimeout(resolve, 1 * 60 * 1000);
         });
+      }
+  
+      // Insert data in bulk
+      if (bulkOps.length > 0) {
+        await marketCapModel.bulkWrite(bulkOps);
+        bulkOps = [];
+        console.log("bulkOps",bulkOps)
+      }
+  
+      // Exit the loop when all data is fetched
+      if (order >= MAX_MARKET_LIMIT) {
+        break;
       }
     }
   };
   
+  
   marketCapController()
-  // Run the controller every 30 minutes
+  // Run the controller every 60 minutes
   setInterval(marketCapController, 60 * 60 * 1000);
 
 

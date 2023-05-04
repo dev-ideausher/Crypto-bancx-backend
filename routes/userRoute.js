@@ -8,7 +8,7 @@ const {
   generateToken,
 } = require("../controllers/firebaseController");
 const userController = require("../controllers/userController");
-const marketCapController = require("../controllers/marketCapContgroller");
+const marketCapController = require("../controllers/marketCapController");
 const router = require("express").Router();
 
 router.post("/onboarding", requiresAuth, userController.userOnboarding);
