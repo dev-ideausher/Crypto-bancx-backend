@@ -382,7 +382,16 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     if (!content) {
       return next(new AppError("Invalid id", 500));
     }
-    return res.status(200).json({ status: true, message: "", data: content });
+
+    let tagIds = content.tags.map((tag) => tag.id)
+    let recommended
+    if(content.type=="blog"){
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({viewCount:-1}).limit(5);
+    }else if (content.type=="blog"){
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({createdAt:-1}).limit(5);
+    }
+
+    return res.status(200).json({ status: true, message: "", data: content , recommended: recommended });
   }
   const resultExists = await redisClient.get(`top-content/${type}`);
 
@@ -437,3 +446,39 @@ exports.getVideos = catchAsync(async (req, res, next) => {
     .sort({created_at:-1});
   return res.status(200).json({ status: true, message: "", data: video });
 });
+
+
+//get recomended news
+exports.recommendedMarketNews = catchAsync(async (req,res,next) =>{
+
+  let recommended = await contentModel.find({type:"news"}).populate("author", "name email image").sort({viewCount:-1}).limit(5);
+
+  return res.status(200).json({ status: true, message: "", data: recommended });
+})
+
+//get related news for coins
+// exports.relatedNews = catchAsync(async (req,res,next) =>{
+//   {
+//     title: {$regex: ($('#responseTitle').val()),  $options: "i"}, 
+//     text: {$regex: ($('#responseKeywords').val()), $options: "i"}
+// };
+//get related news for coins
+
+exports.relatedNews = catchAsync(async (req, res, next) => {
+  const { coinId, coinName } = req.query;
+
+  const regexQuery = {
+    $or: [
+      { title: new RegExp(coinId, 'i') },
+      { title: new RegExp(coinName, 'i') }
+    ]
+  };
+
+  let recommended = await contentModel
+    .find({ type: "news", ...regexQuery})
+    .populate("author", "name email image")
+    .sort({ viewCount: -1 })
+    .limit(5);
+
+  return res.status(200).json({ status: true, message: "", data: recommended });
+})
