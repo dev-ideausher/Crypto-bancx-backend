@@ -36,6 +36,34 @@ exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
   });
 })
 
+//single coin auth
+exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
+  let id = req.params.id
+
+  let marketCap = await marketCapModel.findOne({marketCapId:id}).lean();
+  const watchListedId = await watchListModel.findOne({id:id, userId: req.user._id }).distinct('id');
+  if (watchListedId){
+    marketCap.isWishListed=true;
+  }
+
+  return res.status(200).json({
+    status: true, 
+    marketCap: marketCap,
+  });
+})
+
+//single coin no auth
+exports.singleCryptoMarketNoAuth = catchAsync(async (req, res, next) => {
+  let id = req.params.id
+
+  let marketCap = await marketCapModel.findOne({marketCapId:id});
+
+  return res.status(200).json({
+    status: true, 
+    marketCap: marketCap,
+  });
+})
+
 // crypto tracker
 exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
   const { page, limit } = req.query;
