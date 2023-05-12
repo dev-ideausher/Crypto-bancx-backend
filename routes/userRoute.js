@@ -48,4 +48,6 @@ router.get("/graph-ohlc", marketCapController.graphOhlc);
 router.get("/graph-chart", marketCapController.graphMarketChart);
 router.get("/graph-range", marketCapController.graphMarketRange);
 
+router.get("/market/search-suggestion", marketCapController.searchListSuggestion);
+
 module.exports = router;

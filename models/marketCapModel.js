@@ -22,7 +22,13 @@ const schema = new mongoose.Schema(
         type:String,
         required:true
     },
-    data:Object
+    data:Object,
+    description:{
+        type:String,
+    },
+    homepageUrl:[{
+        type:String
+    }]
   },
   { timestamps: true }
 );

@@ -37,5 +37,7 @@ router.get("/search", contentController.search);
 
 router.get("/related-news", contentController.relatedNews);
 router.get("/recommended-news",contentController.recommendedMarketNews);
+router.get("/search-suggestion", contentController.searchListSuggestion);
+
 
 module.exports = router;

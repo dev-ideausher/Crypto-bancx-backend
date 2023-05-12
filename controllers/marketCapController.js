@@ -41,6 +41,25 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
   let id = req.params.id
 
   let marketCap = await marketCapModel.findOne({marketCapId:id}).lean();
+  if (!marketCap.description){
+    let id = marketCap._id
+    const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/${id}`, {
+      params: {
+        localization: false,
+        tickers: false,
+        market_data: false,
+        developer_data: false,
+        sparkline: false,
+      },
+    });
+    const descriptionString = response.data.description.en.replace(/<[^>]+>/g, '');
+    console.log(descriptionString);
+    marketCap = await marketCapModel.findByIdAndUpdate(id,{
+      description:descriptionString,
+      homepageUrl:response.data.links.homepage,
+    },{new:true})
+  }
+
   const watchListedId = await watchListModel.findOne({id:id, userId: req.user._id }).distinct('id');
   if (watchListedId){
     marketCap.isWishListed=true;
@@ -57,11 +76,43 @@ exports.singleCryptoMarketNoAuth = catchAsync(async (req, res, next) => {
   let id = req.params.id
 
   let marketCap = await marketCapModel.findOne({marketCapId:id});
+  if (!marketCap.description){
+    const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/${id}`, {
+      params: {
+        localization: false,
+        tickers: false,
+        market_data: false,
+        developer_data: false,
+        sparkline: false,
+      },
+    });
+    const descriptionString = response.data.description.en.replace(/<[^>]+>/g, '');
+    console.log(descriptionString);
+    marketCap.description=descriptionString;
+    marketCap.homepageUrl=response.data.links.homepage;
+    await marketCap.save();
+  }
 
   return res.status(200).json({
     status: true, 
     marketCap: marketCap,
   });
+})
+
+
+exports.searchListSuggestion = catchAsync(async (req, res, next) => {
+  const { search } = req.query;
+
+  const regexQuery = {
+      marketCapId: new RegExp(search, 'i')
+  };
+
+  let suggestion = await marketCapModel
+    .find({...regexQuery})
+    .select("marketCapId")
+    .limit(5);
+
+  return res.status(200).json({ status: true, message: "", data: suggestion });
 })
 
 // crypto tracker

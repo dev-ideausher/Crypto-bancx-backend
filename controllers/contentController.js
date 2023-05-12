@@ -482,3 +482,74 @@ exports.relatedNews = catchAsync(async (req, res, next) => {
 
   return res.status(200).json({ status: true, message: "", data: recommended });
 })
+
+// exports.searchListSuggestion = catchAsync(async (req, res, next) => {
+//   const { type, search } = req.query;
+
+//   const regexQuery = {
+//     $or: [
+//       { title: new RegExp(search, 'i') },
+//       { 'tags.name': new RegExp(search, 'i') }
+//     ]
+//   };
+
+//   let suggestion = await contentModel
+//     .find({ type: type, ...regexQuery})
+//     .populate("tags", "name")
+//     .select("tags title")
+//     .limit(5);
+
+//   return res.status(200).json({ status: true, message: "", data: suggestion });
+// })
+
+exports.searchListSuggestion = catchAsync(async (req, res, next) => {
+  const { type, search } = req.query;
+
+  const regexQuery = {
+    $or: [
+      { title: new RegExp(search, 'i') },
+      { 'tags.name': new RegExp(search, 'i') }
+    ]
+  };
+
+  let suggestion = await contentModel
+    .find({ type: type, ...regexQuery})
+    .populate({ path: 'tags', match: { name: new RegExp(search, 'i') }, select: 'name' })
+    .select({ title: regexQuery.$or[0] ? 1 : 0, tags: regexQuery.$or[1] ? 1 : 0 })
+    .limit(5);
+
+  return res.status(200).json({ status: true, message: "", data: suggestion });
+})
+// exports.searchListSuggestion = catchAsync(async (req, res, next) => {
+//   const { type, search } = req.query;
+
+//   const matchQuery = {
+//     $or: [
+//       { title: new RegExp(search, 'i') },
+//       { 'tags.name': new RegExp(search, 'i') }
+//     ]
+//   };
+
+//   const projectTitle = [
+//     { $match: { title: new RegExp(search, 'i') } },
+//     { $project: { title: 1, tags: [] } }
+//   ];
+
+//   const projectTags = [
+//     { $match: { 'tags.name': new RegExp(search, 'i') } },
+//     { $project: { tags: 1, title: [] } }
+//   ];
+
+//   let suggestion = await contentModel
+//     .aggregate([
+//       { $match: { type, ...matchQuery } },
+//       { $facet: { titleDocs: projectTitle, tagsDocs: projectTags } },
+//       { $project: { results: { $concatArrays: ['$titleDocs', '$tagsDocs'] } } },
+//       { $unwind: '$results' },
+//       { $replaceRoot: { newRoot: '$results' } },
+//       { $limit: 5 }
+//     ]);
+
+//   return res.status(200).json({ status: true, message: "", data: suggestion });
+// });
+
