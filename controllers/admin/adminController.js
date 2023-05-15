@@ -2,6 +2,7 @@ const adminModel = require("../../models/adminModel");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcryptjs");
 const AppError = require("../../utils/appError");
+const { JWT_EXPIRY_TIME } = require("../../config/config");
 const {
   generateJWTToken,
   isDate,
@@ -67,12 +68,13 @@ exports.login = catchAsync(async (req, res, next) => {
     console.log("password is wrong");
     return next(new AppError(err, 400));
   }
-
-  const { token } = generateJWTToken(isAdminExists._id, "5h");
+  const millisecondsPerDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
+  const expirationInMilliseconds = parseInt(JWT_EXPIRY_TIME) * millisecondsPerDay;
+  const { token } = generateJWTToken(isAdminExists._id, JWT_EXPIRY_TIME);
   return res
     .status(200)
     .cookie("token", token, {
-      expires: new Date(Date.now() + 1800000),
+      expires: new Date(Date.now() + expirationInMilliseconds),
       httpOnly: true,
       sameSite: "none",
       // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
