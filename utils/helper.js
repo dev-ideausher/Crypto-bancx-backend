@@ -1,6 +1,6 @@
 //for making regex search query
 const jwt = require("jsonwebtoken");
-const { JWT_SECRETE_KEY } = require("../config/config");
+const { JWT_SECRETE_KEY, JWT_EXPIRY_TIME } = require("../config/config");
 const topContentModel = require("../models/topContentModel");
 const AppError = require("./appError");
 const catchAsync = require("./catchAsync");
@@ -226,7 +226,8 @@ const changeOrder = () => {
     if (!current) {
       return next(new AppError("Invalid data", 500));
     }
-    console.log(allTopContent)
+    console.log("all",allTopContent)
+    console.log(current.priority)
     if (changeType === "+1" && current.priority >= allTopContent) {
       return next(new AppError("Can not increase priority any more", 500));
     }
