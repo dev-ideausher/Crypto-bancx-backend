@@ -222,7 +222,7 @@ const changeOrder = () => {
   return catchAsync(async (req, res, next) => {
     const { _id, type, changeType } = req.body;
     const current = await topContentModel.findById(_id);
-    const allTopContent = await topContentModel.find({type:"testimonial"}).count();
+    const allTopContent = await topContentModel.find({type:type}).count();
     if (!current) {
       return next(new AppError("Invalid data", 500));
     }
