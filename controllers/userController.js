@@ -35,23 +35,18 @@ exports.login = catchAsync(async (req, res, next) => {
 //update user
 exports.updateUser = catchAsync(async (req, res, next) => {
   const user = req.user;
-  const userId = req.params.userId;
+  const {name , image} = req.body
 
-  if (
-    user.userType === "admin" ||
-    JSON.stringify(user._id) === JSON.stringify(userId)
-  ) {
-    let updatedUser = await User.findByIdAndUpdate(userId, req.body, {
-      new: true,
-    });
-    return res.status(200).json({
-      status: true,
-      message: "User updated",
-      user: updatedUser,
-    });
-  } else {
-    return next(new AppError("You don't have permission to edit user", 400));
-  }
+  let updatedUser = await User.findByIdAndUpdate(user._id,{
+    name:name,
+    image:image
+  },{new: true});
+
+  return res.status(200).json({
+    status: true,
+    message: "User updated",
+    user: updatedUser,
+  });
 });
 
 //get a user

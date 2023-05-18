@@ -31,8 +31,8 @@ router.get(
   userController.getAllWatchListCoins
 );
 
-// router.get("/all-users",userController.getAllUsers);
-// router.patch("/:userId",requiresAuth,userController.updateUser);
+router.get("/all-users",userController.getAllUsers);
+router.patch("/edit",requiresAuth,userController.updateUser);
 router.get("/single", requiresAuth, userController.getAUser);
 router.get("/logout", requiresAuth, userController.logout);
 

@@ -296,173 +296,41 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 });
 
 // search
-// exports.search = catchAsync(async (req, res, next) => {
-//   const { query, type, isSuggested } = req.query;
-//   // const resultExists = await redisClient.get(
-//   //   `search?query=${query}&type=${type}`
-//   // );
-//   // if (resultExists) {
-//   //   //await redisClient.quit();
-//   //   return res.status(200).json({
-//   //     status: true,
-//   //     message: "Result found",
-//   //     searchResult: JSON.parse(resultExists),
-//   //   });
-//   // }
-
-//   //search over the tags and title add pagination sort newest first
-
-//   const regexQuery = {
-//     $or: [
-//       // { title: new RegExp(query, 'i') },
-//       // { description: new RegExp(query, 'i') },
-//       { 'tags.name': new RegExp(query, 'i') }
-//     ]
-//   };
-
-//   // if (isSuggested) {
-//   // let regexQuery={
-//   //   'tags.name': new RegExp(query, 'i')
-//   // }
-//   // }
-
-//   const searchResult = await contentModel
-//     .find({type:type, ...regexQuery })
-//     .populate('tags', 'name')
-//     .populate('author', 'name email image');
-
-//   // await redisClient.SETEX(
-//   //   `search?query=${query}&type=${type}`,
-//   //   EXPIRY_TIME,
-//   //   JSON.stringify(searchResult)
-//   // );
-//   //await redisClient.quit();
-//   return res.status(200).json({ status: true, message: "search", searchResult });
-// });
-
 exports.search = catchAsync(async (req, res, next) => {
-  // const { query, type, isSuggested } = req.query;
-
-  // let regexQuery = {
-  //   $or: [
-  //     { title: { $regex: query, $options: 'i' } },
-  //     { description: { $regex: query, $options: 'i' } },
-  //     { 'tags.name': { $regex: query, $options: 'i' } }
-  //   ]
-  // };
-
-
-  // if (isSuggested==true) {
-  //   console.log("is suggested")
-  //   regexQuery = {'tags.name': { $regex: query, $options: 'i' } }
-  // }
+  const { query, type } = req.query;
   
-  // let pipeline = [
-  //   {
-  //     $lookup: {
-  //       from: "tags",
-  //       localField: "tags",
-  //       foreignField: "_id",
-  //       as: "tags"
-  //     }
-  //   },
-  //   {
-  //     $unwind: "$tags"
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: "author",
-  //       localField: "author",
-  //       foreignField: "_id",
-  //       as: "author"
-  //     }
-  //   },
-  //   {
-  //     $unwind: "$author"
-  //   },
-  //   {
-  //     $project: {
-  //       _id: 1,
-  //       title: '$title',
-  //       description: '$description',
-  //       image: 1,
-  //       tags: 1,
-  //       'author.name': 1, 'author.email': 1, 'author.image': 1
-  //     },
-  //   },
-    // {
-    //   $match: {
-    //     type:type,
-    //     ...regexQuery,
-
-    //     // $or: [
-    //     //   { "event.title": { $regex: search, $options: "i" } },
-    //     //   { "user.email": { $regex: search, $options: "i" } },
-    //     //   { "user.name": { $regex: search, $options: "i" } }
-    //     // ]
-    //   }
-    // },
-  // ];
-  // let pipeline = [
-  //   {
-  //     '$unwind': {
-  //       'path': '$tags'
-  //     }
-  //   }, {
-  //     '$lookup': {
-  //       'from': 'tag', 
-  //       'localField': 'tags', 
-  //       'foreignField': '_id', 
-  //       'as': 'tag'
-  //     }
-  //   }, {
-  //     '$unwind': {
-  //       'path': '$tag'
-  //     }
-  //   }, {
-  //     '$group': {
-  //       '_id': '$_id', 
-  //       'tags': {
-  //         '$push': '$tag'
-  //       }
-  //     }
-  //   }, {
-  //     '$project': {
-  //       '_id': 1, 
-  //       'title': 1, 
-  //       'description': 1, 
-  //       'tags': &tags
-  //     }
-  //   }
-  // ]
-
-
-
-  // const pipeline = [
-  //   { $match: { type, ...regexQuery } },
-  //   { $lookup: { from: 'tags', localField: 'tags', foreignField: '_id', as: 'tags' } },
-  //   { $lookup: { from: 'users', localField: 'author', foreignField: '_id', as: 'author' } },
-  //   { $unwind: '$tags' },
-  //   {
-  //     $group: {
-  //       _id: '$_id',
-  //       title: { $first: '$title' },
-  //       description: { $first: '$description' },
-  //       tags: { $push: '$tags.name' },
-  //       author: { $first: { $arrayElemAt: ['$author', 0] } }
-  //     }
-  //   },
-  //   { $project: { _id: 1, title: 1, description: 1, tags: 1, 'author.name': 1, 'author.email': 1, 'author.image': 1 } }
-  // ];
-
-
-
-  // const searchResult = await contentModel.aggregate(pipeline);
-
-  // res.status(200).json({ status: 'success', data: { searchResult } });
+  const searchResult = await contentModel.aggregate([
+      {
+          $lookup: {
+            from: 'Tag',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tags',
+          },
+      },
+      {
+          $unwind:'$tags'
+      },
+      {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  { title: { $regex: new RegExp(query, 'i') } },
+                  { 'tags.name': { $regex: new RegExp(query, 'i') } },
+                ],
+              },
+              { type:type},
+            ],
+          },
+      },
+    ]);
+  return res.status(200).json({
+    status: true,
+    message: "search",
+    searchResult 
+  });
 });
-
-
 
 // trending content
 exports.trending = catchAsync(async (req, res, next) => {
