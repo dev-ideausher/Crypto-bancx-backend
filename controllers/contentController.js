@@ -299,7 +299,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 exports.search = catchAsync(async (req, res, next) => {
   const { query, type } = req.query;
   
-  const searchResult = await contentModel.aggregate([
+  const doc = await contentModel.aggregate([
       {
           $lookup: {
             from: 'Tag',
@@ -324,10 +324,35 @@ exports.search = catchAsync(async (req, res, next) => {
             ],
           },
       },
+      {
+        $group: {
+          _id: '$_id',
+          // title: { $first: '$title' },
+          tags: { $push: '$tags' },
+          // description: { $first: '$description' },
+          // content: { $first: '$content' },
+          // author: { $first: '$author' },
+          // onModel: { $first: '$onModel' },
+          // type: { $first: '$type' },
+          // ViewCount: { $first: '$ViewCount' },
+          // isDeleted: { $first: '$isDeleted' },
+          // createdAt: { $first: '$createdAt' },
+          // updatedAt: { $first: '$updatedAt' },
+        },
+      },
     ]);
+
+    // Store all the _id values in an array
+    const idArray = doc.map((result) => result._id);
+
+    let searchResult = await contentModel.find({_id:{$in:idArray}})
+    .populate("tags", "name")
+    .populate("author", "name email image")
+
   return res.status(200).json({
     status: true,
     message: "search",
+    result:searchResult.length,
     searchResult 
   });
 });
