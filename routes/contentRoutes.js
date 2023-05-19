@@ -2,6 +2,9 @@ const router = require("express").Router();
 const contentController = require("../controllers/contentController");
 const authController = require("../controllers/authController");
 const adminModel = require("../models/adminModel");
+const {
+  requiresAuth,
+} = require("../controllers/firebaseController");
 
 router.post("/add", authController.checkRole(), contentController.addContent);
 
@@ -10,6 +13,14 @@ router.post(
   authController.validateToken(adminModel),
   contentController.addTag
 );
+
+//add tag for user
+router.post(
+  "/user/add-tag",
+  requiresAuth,
+  contentController.addTag
+);
+
 router.get("/all-tags", contentController.getAllTags);
 
 router.post(
