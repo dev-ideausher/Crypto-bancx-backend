@@ -1,40 +1,55 @@
-const adminModel = require("../../models/adminModel");
 const catchAsync = require("../../utils/catchAsync");
-const bcrypt = require("bcryptjs");
 const AppError = require("../../utils/appError");
 
 const ViewsModel = require("../../models/viewsModel");
-const ContentModel = require("../../models/contentModel");
-const {
-    generateDate,
-  } = require("../../utils/helper");
 
 // admin dashboard analytics
 exports.analytics = catchAsync(async (req, res, next) => {
 
     let {duration,type} = req.query
 
-    const { status: isValidDuration, firstDay, lastDay } = generateDate(duration);
-    if (!isValidDuration) {
-      return next(new AppError("Invalid Duration", 500));
+    let filter = {};
+
+    const currentDate = new Date();
+    
+    switch (duration) {
+      case 'week':
+        // 15 days before the current date
+        const firstDayWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 15);
+        filter.createdAt = { $gte: firstDayWeek, $lte: currentDate };
+        break;
+      case 'month':
+        // 2.5 months before the current date
+        const firstDayMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, currentDate.getDate());
+        filter.createdAt = { $gte: firstDayMonth, $lte: currentDate };
+        break;
+      case 'year':
+        // 2 years and 1 month before the current date
+        const firstDayYear = new Date(currentDate.getFullYear() - 2, currentDate.getMonth() - 1, currentDate.getDate());
+        filter.createdAt = { $gte: firstDayYear, $lte: currentDate };
+        break;
+      default:
+        return next(new AppError("duration query is needed", 403));
     }
-
-    let filter = {
-        createdAt: {$gte:firstDay,$lt:lastDay},
-        type:type
-    };
-  
-
+    
+    filter.type = type;
+    
     let views = await ViewsModel.find(filter);
 
     let result = {}
-  if (duration === "week" || duration === "wholeWeek") {
-    result.byWeek = groupByWeek(views);
-  } else if (duration === "month" || duration === "months") {
-    result.byMonth = groupByMonth(views);
-  } else if (duration === "year") {
-    result.byYear = groupByYear(views);
-  }
+    switch (duration) {
+      case 'week':
+        result = groupByDay(views);
+        break;
+      case 'month':
+        result = groupByWeek(views);
+        break;
+      case 'year':
+        result = groupByMonth(views);
+        break;
+      default:
+        return next(new AppError("duration query is needed", 403));
+    }
 
     return res.status(200).json({
       status: true,
@@ -43,43 +58,12 @@ exports.analytics = catchAsync(async (req, res, next) => {
     });
 });
 
-// // Helper function to group views by week
-// const groupByWeek = (views, firstDay, lastDay) => {
-//   let byWeek = {};
-
-//   // Get the starting and ending day of the week
-//   let currDay = new Date(firstDay);
-//   let endDay = new Date(lastDay);
-//   endDay.setDate(endDay.getDate() + 1); // Increment by 1 to include the last day in the week
-
-//   // Iterate over each day within the week
-//   while (currDay < endDay) {
-//     let dateStr = currDay.toISOString().split("T")[0];
-//     byWeek[dateStr] = 0;
-//     currDay.setDate(currDay.getDate() + 1);
-//   }
-
-//   // views.forEach((view) => {
-//   //   // Check if the createdAt is within the week
-//   //   if (view.createdAt >= firstDay && view.createdAt < endDay) {
-//   //     let dateStr = view.createdAt.toISOString().split("T")[0];
-//   //     byWeek[dateStr].push(view);
-//   //   }
-//   // });
-
-//   views.forEach((view) => {
-//     // Check if the createdAt is within the week
-//     if (view.createdAt >= firstDay && view.createdAt < endDay) {
-//       let dateStr = view.createdAt.toISOString().split("T")[0];
-//       byWeek[dateStr] += 1; // Increment the count for the corresponding day
-//     }
-//   });
-
-//   return byWeek;
-// };
-
-const groupByWeek = (views) => {
-  const byWeek = {};
+// Helper function to group views by week
+const groupByDay = (views) => {
+  const byWeek = {
+    views: [],
+    data: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  };
 
   // Get the current date and time
   const currentDate = new Date();
@@ -93,7 +77,7 @@ const groupByWeek = (views) => {
   let currDay = new Date(firstDay.getTime());
   while (currDay <= endDay) {
     let dateStr = currDay.toISOString().split("T")[0];
-    byWeek[dateStr] = 0;
+    byWeek.views.push(0); // Add initial count 0 for each day
     currDay.setDate(currDay.getDate() + 1);
   }
 
@@ -101,10 +85,10 @@ const groupByWeek = (views) => {
   views.forEach((view) => {
     // Check if the createdAt is within the week
     if (view.createdAt >= firstDay && view.createdAt <= endDay) {
-      let dateStr = view.createdAt.toISOString().split("T")[0];
+      let dayIndex = view.createdAt.getDay() - 1; // Get the day index (0-6)
 
       // Increment the count for the corresponding day
-      byWeek[dateStr] += 1;
+      byWeek.views[dayIndex] += 1;
     }
   });
 
@@ -112,159 +96,106 @@ const groupByWeek = (views) => {
 };
 
 
-// const groupByWeek = (views, duration) => {
-//   const byWeek = {};
+////////////////////////////////////////////////////
 
-//   // Get the current date and time
-//   const currentDate = new Date();
+//previous month group by week
+const groupByWeek = (views, duration) => {
+  const counts = {};
+  const result = {
+    views: [],
+    data: [],
+  };
 
-//   // Calculate the first and last day of the last complete week (Monday to Sunday)
-//   const lastDay = currentDate.getDay() === 0 ? 7 : currentDate.getDay();
-//   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - (lastDay + 6) % 7);
-//   const endDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - (lastDay % 7));
+  // Get the current date and month
+  const currentDate = new Date('2023-05-19T14:42:10.122Z');
+  currentDate.setUTCHours(0, 0, 0, 0);
+  console.log("currentDate",currentDate)
+  const currentMonth = currentDate.getMonth();
+  console.log("currentMonth",currentMonth)
+  // Get the previous month
+  const previousMonth = new Date(currentDate.getFullYear(), currentMonth - 1, 1);
+  if (currentMonth === 0) {
+    // Adjust the year if the current month is January
+    previousMonth.setFullYear(previousMonth.getFullYear() - 1);
+  }
 
-//   // Iterate over each day within the week
-//   let currDay = new Date(firstDay.getTime());
-//   while (currDay <= endDay) {
-//     let dateStr = currDay.toISOString().split("T")[0];
-//     byWeek[dateStr] = 0;
-//     currDay.setDate(currDay.getDate() + 1);
-//   }
+  console.log("previousMonth",previousMonth)
+  // Get the starting and ending dates of the previous month
+  const previousMonthFirstDay = new Date(previousMonth.getFullYear(), previousMonth.getMonth(), 1);
+  const previousMonthLastDay = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0);
+  console.log("previousMonthFirstDay",previousMonthFirstDay)
+  console.log("previousMonthLastDay",previousMonthLastDay)
 
-//   // Iterate over the views
-//   views.forEach((view) => {
-//     // Check if the createdAt is within the week
-//     if (view.createdAt >= firstDay && view.createdAt <= endDay) {
-//       let dateStr = view.createdAt.toISOString().split("T")[0];
+  // Get the first Sunday in the previous month
+  const firstSunday = new Date(previousMonthFirstDay);
+  firstSunday.setDate(previousMonthFirstDay.getDate() + (7 - previousMonthFirstDay.getDay()));
+  console.log('first sun',firstSunday)
 
-//       // Increment the count for the corresponding day
-//       byWeek[dateStr] += 1;
-//     }
-//   });
+  // Get the last Saturday in the previous month
+  const lastSaturday = new Date(previousMonthLastDay);
+  lastSaturday.setDate(previousMonthLastDay.getDate() - (previousMonthLastDay.getDay() + 1) % 7);
+  console.log('last sat',lastSaturday)
 
-//   return byWeek;
-// };
+  // Calculate the number of weeks in the previous month
+  let weekCount = Math.ceil((lastSaturday.getDate() - firstSunday.getDate() + 1) / 7);
+  console.log("week count",weekCount)
 
-const groupByMonth = (views) => {
-  const byMonth = {};
+  // Check if there are days after the last Saturday until the last day of the month
+  if (lastSaturday < previousMonthLastDay) {
+    weekCount++;
+  }
+  let isfirstSundayWeek = 0
+  if (firstSunday > previousMonthFirstDay) {
+    weekCount++;
+    isfirstSundayWeek = 1
+  }
 
-  // Get the current date and time
-  const currentDate = new Date();
-
-  // Calculate the first and last day of the last complete month
-  const lastMonth = currentDate.getMonth();
-  const lastMonthFirstDay = new Date(currentDate.getFullYear(), lastMonth - 1, 1);
-  const lastMonthLastDay = new Date(currentDate.getFullYear(), lastMonth, 0);
-
-  // Split the last complete month data into weeks
-  const weeks = splitIntoWeeks(lastMonthFirstDay, lastMonthLastDay);
-
-  // Initialize the week-based data structure
-  weeks.forEach((week) => {
-    byMonth[week] = 0;
-  });
+  // Initialize the view counts for each week
+  for (let i = 1; i <= weekCount; i++) {
+    counts[`week${i}`] = 0;
+  }
 
   // Iterate over the views
   views.forEach((view) => {
-    // Check if the createdAt is within the last complete month
-    if (view.createdAt >= lastMonthFirstDay && view.createdAt <= lastMonthLastDay) {
-      const weekIndex = getWeekIndex(view.createdAt, weeks);
+    // Check if the createdAt is within the previous month
+    if (view.createdAt >= previousMonthFirstDay && view.createdAt <= previousMonthLastDay) {
+      const viewDate = new Date(view.createdAt);
+      let weekIndex;
 
-      // Increment the count for the corresponding week
-      if (weekIndex !== -1) {
-        byMonth[weeks[weekIndex]] += 1;
+      // Check if the view date is before the first Sunday
+      if (viewDate < firstSunday) {
+        weekIndex = 1;
+        console.log("weekIndex",weekIndex,"  view.createdAt", view.createdAt)
       }
+      // Check if the view date is after the last Saturday
+      else if (viewDate > lastSaturday) {
+        weekIndex = weekCount;
+      }
+      // Calculate the week index based on the view date
+      else {
+        weekIndex = Math.ceil((viewDate.getDate() - firstSunday.getDate() + 1) / 7)+isfirstSundayWeek;
+        console.log("weekIndex",weekIndex,"  view.createdAt", view.createdAt)
+      }
+
+      counts[`week${weekIndex}`]++;
     }
   });
 
-  return byMonth;
-};
-
-// Helper function to split a given month into weeks
-const splitIntoWeeks = (firstDay, lastDay) => {
-  const weeks = [];
-
-  let currDay = new Date(firstDay.getTime());
-  while (currDay <= lastDay) {
-    weeks.push(currDay.toISOString().split("T")[0]);
-    currDay.setDate(currDay.getDate() + 7);
+  // Add the view counts to the result
+  for (let i = 1; i <= weekCount; i++) {
+    result.views.push(counts[`week${i}`]);
+    result.data.push(`week${i}`);
   }
 
-  return weeks;
-};
-
-// Helper function to get the index of the week for a given date
-const getWeekIndex = (date, weeks) => {
-  const dateStr = date.toISOString().split("T")[0];
-
-  return weeks.findIndex((week) => dateStr >= week);
+  return result;
 };
 
 
+///////////////////////////////////////////////
 
-// const groupByMonth = (views, firstDay, lastDay) => {
-//   // Initialize the result object
-//   const byMonth = {};
-
-//   // Iterate over the views
-//   views.forEach((view) => {
-//     // Check if the createdAt is within the month
-//     if (view.createdAt >= firstDay && view.createdAt < lastDay) {
-//       // Calculate the week number for the view's createdAt
-//       const weekNumber = getWeekNumber(view.createdAt);
-
-//       // Check if the week number exists in the byMonth object
-//       if (!byMonth[weekNumber]) {
-//         // If not, initialize it with a count of 1
-//         byMonth[weekNumber] = 1;
-//       } else {
-//         // If it exists, increment the count by 1
-//         byMonth[weekNumber] += 1;
-//       }
-//     }
-//   });
-
-//   return byMonth;
-// };
-
-// // Helper function to get the week number of a date
-// const getWeekNumber = (date) => {
-//   const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-//   const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-//   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-// };
-
-// const groupByYear = (views, firstDay, lastDay) => {
-//   // Initialize the result object
-//   const byYear = {};
-
-//   // Iterate over the views
-//   views.forEach((view) => {
-//     // Check if the createdAt is within the year
-//     if (view.createdAt >= firstDay && view.createdAt < lastDay) {
-//       // Get the month and year of the view's createdAt
-//       const month = view.createdAt.getMonth();
-//       const year = view.createdAt.getFullYear();
-
-//       // Generate a unique key for the month and year combination
-//       const key = `${year}-${month}`;
-
-//       // Check if the key exists in the byYear object
-//       if (!byYear[key]) {
-//         // If not, initialize it with a count of 1
-//         byYear[key] = 1;
-//       } else {
-//         // If it exists, increment the count by 1
-//         byYear[key] += 1;
-//       }
-//     }
-//   });
-
-//   return byYear;
-// };
-
-const groupByYear = (views) => {
-  const byYear = {};
+const groupByMonth = (views, duration) => {
+  const counts = [];
+  const months = [];
 
   // Get the current date and time
   const currentDate = new Date();
@@ -275,27 +206,28 @@ const groupByYear = (views) => {
   const lastYearLastDay = new Date(lastYear, 11, 31);
 
   // Split the last complete year data into months
-  const months = splitIntoMonths(lastYearFirstDay, lastYearLastDay);
+  const monthsArray = splitIntoMonths(lastYearFirstDay, lastYearLastDay);
 
   // Initialize the month-based data structure
-  months.forEach((month) => {
-    byYear[month] = 0;
+  monthsArray.forEach((month) => {
+    months.push(month);
+    counts.push(0);
   });
 
   // Iterate over the views
   views.forEach((view) => {
     // Check if the createdAt is within the last complete year
     if (view.createdAt >= lastYearFirstDay && view.createdAt <= lastYearLastDay) {
-      const monthIndex = getMonthIndex(view.createdAt, months);
+      const monthIndex = getMonthIndex(view.createdAt, monthsArray);
 
       // Increment the count for the corresponding month
       if (monthIndex !== -1) {
-        byYear[months[monthIndex]] += 1;
+        counts[monthIndex] += 1;
       }
     }
   });
 
-  return byYear;
+  return { views: counts, data:months };
 };
 
 // Helper function to split a given year into months
@@ -304,7 +236,7 @@ const splitIntoMonths = (firstDay, lastDay) => {
 
   let currMonth = new Date(firstDay.getTime());
   while (currMonth <= lastDay) {
-    months.push(currMonth.toLocaleString("default", { month: "long" }));
+    months.push(currMonth.toLocaleString("default", { month: "short" }));
     currMonth.setMonth(currMonth.getMonth() + 1);
   }
 
@@ -313,7 +245,7 @@ const splitIntoMonths = (firstDay, lastDay) => {
 
 // Helper function to get the index of the month for a given date
 const getMonthIndex = (date, months) => {
-  const monthStr = date.toLocaleString("default", { month: "long" });
+  const monthStr = date.toLocaleString("default", { month: "short" });
 
   return months.findIndex((month) => monthStr === month);
 };
