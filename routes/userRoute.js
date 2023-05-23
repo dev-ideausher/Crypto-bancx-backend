@@ -9,6 +9,7 @@ const {
 } = require("../controllers/firebaseController");
 const userController = require("../controllers/userController");
 const marketCapController = require("../controllers/marketCapController");
+const emailSubscriptionController = require("../controllers/emailSubscriptionController")
 const router = require("express").Router();
 
 router.post("/onboarding", requiresAuth, userController.userOnboarding);
@@ -49,5 +50,7 @@ router.get("/graph-chart", marketCapController.graphMarketChart);
 router.get("/graph-range", marketCapController.graphMarketRange);
 
 router.get("/market/search-suggestion", marketCapController.searchListSuggestion);
+
+router.post("/email-subscription/add", emailSubscriptionController.addEmailSubscription);
 
 module.exports = router;
