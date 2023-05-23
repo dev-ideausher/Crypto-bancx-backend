@@ -206,7 +206,9 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     const dataExists = await redisClient.get(`latest?contentId=${contentId}`);
     if (dataExists) {
 
-      const content = JSON.parse(dataExists);
+      const {content,recommended} = JSON.parse(dataExists);
+      console.log(content)
+      console.log(JSON.parse(dataExists))
 
       await viewsModel.create({
         type:content.type,
@@ -225,7 +227,8 @@ exports.latestContent = catchAsync(async (req, res, next) => {
       return res.status(200).json({
         status: true,
         message: "Data found",
-        content: JSON.parse(dataExists),
+        content: content,
+        recommended:recommended,
       });
     }
     const content = await contentModel
@@ -234,10 +237,18 @@ exports.latestContent = catchAsync(async (req, res, next) => {
       .populate("author");
     if (!content) return next(new AppError("Content not found", 404));
 
+    let tagIds = content.tags.map((tag) => tag.id)
+    let recommended
+    if(content.type=="blog"){
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({viewCount:-1}).limit(5);
+    }else if (content.type=="news"){
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({createdAt:-1}).limit(5);
+    }
+
     await redisClient.SETEX(
       `latest?contentId=${contentId}`,
       EXPIRY_TIME,
-      JSON.stringify(content?._doc)
+      JSON.stringify({content: content?._doc, recommended})
     );
     //await redisClient.quit();
 
@@ -256,7 +267,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 
     return res
       .status(200)
-      .json({ status: true, message: "Content found", content: content });
+      .json({ status: true, message: "Content found", content: content, recommended });
   }
 
   if (page < 1 || pageSize <= 0)
@@ -417,7 +428,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     let recommended
     if(content.type=="blog"){
       recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({viewCount:-1}).limit(5);
-    }else if (content.type=="blog"){
+    }else if (content.type=="news"){
       recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({createdAt:-1}).limit(5);
     }
 
@@ -486,13 +497,7 @@ exports.recommendedMarketNews = catchAsync(async (req,res,next) =>{
   return res.status(200).json({ status: true, message: "", data: recommended });
 })
 
-//get related news for coins
-// exports.relatedNews = catchAsync(async (req,res,next) =>{
-//   {
-//     title: {$regex: ($('#responseTitle').val()),  $options: "i"}, 
-//     text: {$regex: ($('#responseKeywords').val()), $options: "i"}
-// };
-//get related news for coins
+
 
 exports.relatedNews = catchAsync(async (req, res, next) => {
   const { coinId, coinName } = req.query;
@@ -513,34 +518,10 @@ exports.relatedNews = catchAsync(async (req, res, next) => {
   return res.status(200).json({ status: true, message: "", data: recommended });
 })
 
-// exports.searchListSuggestion = catchAsync(async (req, res, next) => {
-//   const { type, search } = req.query;
-
-//   const regexQuery = {
-//     $or: [
-//       { title: new RegExp(search, 'i') },
-//       { 'tags.name': new RegExp(search, 'i') }
-//     ]
-//   };
-
-//   let suggestion = await contentModel
-//     .find({ type: type, ...regexQuery})
-//     .populate("tags", "name")
-//     .select("tags title")
-//     .limit(5);
-
-//   return res.status(200).json({ status: true, message: "", data: suggestion });
-// })
 
 exports.searchListSuggestion = catchAsync(async (req, res, next) => {
   const { type, search } = req.query;
 
-  // const regexQuery = {
-    // $or: [
-      // { title: new RegExp(search, 'i') },
-      // { 'tags.name': new RegExp(search, 'i') }
-    // ]
-  // };
   const regexQuery = {
     name: new RegExp(search, 'i')
   }
@@ -550,45 +531,7 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
   .select('name')
   .limit(5)
   
-  // let suggestion = await contentModel
-  //   .find({ type: type, ...regexQuery})
-  //   .populate({ path: 'tags', match: { name: new RegExp(search, 'i') }, select: 'name' })
-  //   .select(tags)
-  //   // .select({ title: regexQuery.$or[0] ? 1 : 0, tags: regexQuery.$or[1] ? 1 : 0})
-  //   .limit(5);
-
   return res.status(200).json({ status: true, message: "", data: suggestion });
 })
-// exports.searchListSuggestion = catchAsync(async (req, res, next) => {
-//   const { type, search } = req.query;
 
-//   const matchQuery = {
-//     $or: [
-//       { title: new RegExp(search, 'i') },
-//       { 'tags.name': new RegExp(search, 'i') }
-//     ]
-//   };
-
-//   const projectTitle = [
-//     { $match: { title: new RegExp(search, 'i') } },
-//     { $project: { title: 1, tags: [] } }
-//   ];
-
-//   const projectTags = [
-//     { $match: { 'tags.name': new RegExp(search, 'i') } },
-//     { $project: { tags: 1, title: [] } }
-//   ];
-
-//   let suggestion = await contentModel
-//     .aggregate([
-//       { $match: { type, ...matchQuery } },
-//       { $facet: { titleDocs: projectTitle, tagsDocs: projectTags } },
-//       { $project: { results: { $concatArrays: ['$titleDocs', '$tagsDocs'] } } },
-//       { $unwind: '$results' },
-//       { $replaceRoot: { newRoot: '$results' } },
-//       { $limit: 5 }
-//     ]);
-
-//   return res.status(200).json({ status: true, message: "", data: suggestion });
-// });
 
