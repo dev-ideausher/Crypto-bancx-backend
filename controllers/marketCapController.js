@@ -65,9 +65,45 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
     marketCap.isWishListed=true;
   }
 
+    // //similiar coins
+    let order = [];
+    let originOrder = marketCap.order;
+    let limit
+    if (originOrder === 2) {
+      limit = 3;
+    } else if (originOrder === 1) {
+      limit = 4;
+    } else {
+      limit = 2;
+    }
+    // console.log("limit",limit)
+    
+    
+    for (let i = 0; i < limit; i++) {
+      originOrder = originOrder + 1;
+      // console.log("i",i,"origin",originOrder);
+      order.push(originOrder);
+    }
+    
+    originOrder = marketCap.order;
+    
+    for (let i = 0; i < limit; i++) {
+      // console.log("origin",originOrder);
+      originOrder = originOrder - 1;
+      // console.log("origin",originOrder);
+      if (originOrder > 0) {
+        // console.log("i",i,"origin",originOrder);
+        order.push(originOrder);
+      }
+    }
+    
+      console.log(order)
+      let similarCoins = await marketCapModel.find({order:{$in:order}}).limit(4)
+
   return res.status(200).json({
     status: true, 
     marketCap: marketCap,
+    similarCoins:similarCoins,
   });
 })
 
@@ -93,9 +129,45 @@ exports.singleCryptoMarketNoAuth = catchAsync(async (req, res, next) => {
     await marketCap.save();
   }
 
+  // //similiar coins
+  let order = [];
+let originOrder = marketCap.order;
+let limit
+if (originOrder === 2) {
+  limit = 3;
+} else if (originOrder === 1) {
+  limit = 4;
+} else {
+  limit = 2;
+}
+// console.log("limit",limit)
+
+
+for (let i = 0; i < limit; i++) {
+  originOrder = originOrder + 1;
+  // console.log("i",i,"origin",originOrder);
+  order.push(originOrder);
+}
+
+originOrder = marketCap.order;
+
+for (let i = 0; i < limit; i++) {
+  // console.log("origin",originOrder);
+  originOrder = originOrder - 1;
+  // console.log("origin",originOrder);
+  if (originOrder > 0) {
+    // console.log("i",i,"origin",originOrder);
+    order.push(originOrder);
+  }
+}
+
+  console.log(order)
+  let similarCoins = await marketCapModel.find({order:{$in:order}}).limit(4)
+
   return res.status(200).json({
     status: true, 
     marketCap: marketCap,
+    similarCoins: similarCoins,
   });
 })
 
@@ -133,6 +205,7 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
         cryptoData: marketCap
   });
 })
+
 
 // const marketCapController = async () => {
 
@@ -194,6 +267,8 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
 //       }
 //     }
 //   };
+
+
 
   const marketCapController = async () => {
     const totalLimitGiven = 250;
