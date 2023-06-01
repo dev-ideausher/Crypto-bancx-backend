@@ -58,14 +58,13 @@ const disableOnEnableFunction = (model) => {
     }
 
     let done
-    if(isActive==true){
-      data.isActive=false
+    if(data.isActive==true){
+      const data = await model.findByIdAndUpdate(_id,{isActive:false},{new:true})
       done = "disabled"
     }else{
-      data.isActive=true
+      const data = await model.findByIdAndUpdate(_id,{isActive:true},{new:true})
       done = "enabled"
     }
-    await data.save();
 
     return res
       .status(200)
