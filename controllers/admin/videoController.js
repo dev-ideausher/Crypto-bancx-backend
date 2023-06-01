@@ -1,7 +1,7 @@
 const catchAsync = require("../../utils/catchAsync");
 const AppError = require("../../utils/appError");
 const {
-  disableFunction,
+  disableOnEnableFunction,
   generateDate,
 } = require("../../utils/helper");
 
@@ -135,7 +135,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
   });
 
 
-exports.changeVideoStatus = disableFunction(videoModel);
+exports.changeVideoStatus = disableOnEnableFunction(videoModel);
   
 //delete video
 exports.deleteVideo = catchAsync(async (req, res, next) => {

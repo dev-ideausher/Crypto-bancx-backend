@@ -2,6 +2,7 @@ const catchAsync = require("../utils/catchAsync");
 const { default: axios } = require("axios");
 const { CRYPTO_TRACKER_URL } = require("../config/config");
 const watchListModel = require("../models/watchlistModel");
+const CC = require('currency-converter-lt')
 
 const marketCapModel = require("../models/marketCapModel")
 
@@ -189,7 +190,23 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 
 // crypto tracker
 exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
-  const { page, limit } = req.query;
+  const { page, limit ,currecncy} = req.query;
+  let isUsd 
+  // let currencyConverter
+  //USD GBP INR EUR
+ const currencyUC = currecncy.toUpperCase();
+if (currencyUC == "USD"){
+  isUsd=true;
+}else{
+  isUsd=false;
+  // currencyConverter = new CC({from:"USD", to:"INR" })
+}
+let currencyConverter = new CC({from:"USD", to:"INR" })
+  // "current_price": 26307,
+  // "price_change_percentage_24h": -3.49518,
+  // "market_cap": 512341577581
+  // "total_supply": 21000000,
+  // "circulating_supply": 19382418,
 
   const orderLImitMax = page * limit
   const orderLImitMin = (page * limit)-limit
@@ -197,12 +214,85 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
 
   let totalPages = Math.ceil(MAX_MARKET_LIMIT / limit)
 
-  let marketCap = await marketCapModel.find(filter).sort({order:1});
+  let marketCap = await marketCapModel.find(filter).sort({order:1}).lean();
+
+  // if(!isUsd){
+  //   marketCap.forEach(async e=>{
+  //     const current_price = await currencyConverter.amount(e.data.current_price).convert();
+  //     e.data.current_price = current_price;
+  //     const price_change_percentage_24h = await currencyConverter.amount(e.data.price_change_percentage_24h).convert();
+  //     e.data.price_change_percentage_24h=price_change_percentage_24h;
+  //     const market_cap = await currencyConverter.amount(e.data.market_cap).convert();
+  //     e.data.market_cap = market_cap;
+  //     const total_supply = await currencyConverter.amount(e.data.total_supply).convert();
+  //     e.data.total_supply = total_supply;
+  //     const circulating_supply = await currencyConverter.amount(e.data.circulating_supply).convert();
+  //     e.data.circulating_supply = circulating_supply;
+  //   })
+  // }
+
+  // const convertToInteger = async (converter, value) => {
+  //   const convertedValue = await converter.amount(value).convert();
+  //   return parseInt(convertedValue, 10);
+  // };
+
+  
+  // if (!isUsd) {
+  //   for (const e of marketCap) {
+  //     e.data.current_price = await convertToInteger(currencyConverter, e.data.current_price);
+  //     e.data.price_change_percentage_24h = await convertToInteger(currencyConverter, e.data.price_change_percentage_24h);
+  //     e.data.market_cap = await convertToInteger(currencyConverter, e.data.market_cap);
+  //     e.data.total_supply = await convertToInteger(currencyConverter, e.data.total_supply);
+  //     e.data.circulating_supply = await convertToInteger(currencyConverter, e.data.circulating_supply);
+  //   }
+  // }
+
+let i=0
+let convertedMarketCap = []
+// if (!isUsd) {
+//   console.log("worling")
+//   convertedMarketCap = marketCap.map(async (e) => {
+//     console.log("e.data.current_price",typeof e.data.current_price)
+//     let i= 45
+//     console.log("i",typeof i)
+//     const current_price = await currencyConverter.amount(400).convert();
+//     console.log("current_price",current_price)
+//     e.data.current_price = current_price; // Convert back to an integer
+
+//     let price_change_percentage_24h = e.data.price_change_percentage_24h;
+//     if (price_change_percentage_24h < 0) {
+//       // Convert negative percentage to positive for conversion
+//       price_change_percentage_24h = Math.abs(price_change_percentage_24h);
+//     }
+//     const converted_price_change_percentage_24h = await currencyConverter.amount(price_change_percentage_24h).convert();
+//     e.data.price_change_percentage_24h = Math.round(converted_price_change_percentage_24h); // Convert back to an integer
+
+//     let market_cap = e.data.market_cap;
+//     if (market_cap < 0) {
+//       // Convert negative percentage to positive for conversion
+//       market_cap = Math.abs(market_cap);
+//     }
+//     const converted_market_cap = await currencyConverter.amount(market_cap).convert();
+//     e.data.market_cap = Math.round(converted_market_cap); // Convert back to an integer
+
+//     // const total_supply = await currencyConverter.amount(Math.abs(e.data.total_supply)).convert();
+//     // e.data.total_supply = Math.round(total_supply); // Convert back to an integer
+
+//     // const circulating_supply = await currencyConverter.amount(e.data.circulating_supply).convert();
+//     // e.data.circulating_supply = Math.round(circulating_supply); // Convert back to an integer
+//     if(e.order==1){
+//       console.log("e",e)
+//     }
+
+//     return e;
+//   });
+// }
+
 
   return res.status(200).json({
         status: true, 
         totalPages: totalPages, 
-        cryptoData: marketCap
+        cryptoData: convertedMarketCap
   });
 })
 

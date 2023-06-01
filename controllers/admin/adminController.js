@@ -5,8 +5,9 @@ const AppError = require("../../utils/appError");
 const { JWT_EXPIRY_TIME } = require("../../config/config");
 const {
   generateJWTToken,
+  generateRefreshToken,
   isDate,
-  disableFunction,
+  disableOnEnableFunction,
   searchNewsOrVideos,
   getData,
   generateDate,
@@ -70,7 +71,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const millisecondsPerDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
   const expirationInMilliseconds = parseInt(JWT_EXPIRY_TIME) * millisecondsPerDay;
-  const { token } = generateJWTToken(isAdminExists._id, JWT_EXPIRY_TIME);
+  const { token } = generateJWTToken(isAdminExists._id);
   return res
     .status(200)
     .cookie("token", token, {
@@ -80,8 +81,53 @@ exports.login = catchAsync(async (req, res, next) => {
       // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: true,
     })
-    .json({ status: true, user: isAdminExists, token: token });
+    .json({ status: true, user: isAdminExists, token: token, });
 });
+
+// // admin login
+// exports.login = catchAsync(async (req, res, next) => {
+//   console.log("in login");
+//   const { email, password } = req.body;
+//   if (!email || !password) {
+//     return next(new AppError("Provide email and password", 400));
+//   }
+
+//   const err = "Email or password does not exists.";
+
+//   const isAdminExists = await adminModel.findOne({ email: email });
+//   if (!isAdminExists) {
+//     console.log("email is wrong");
+//     return next(new AppError(err, 400));
+//   }
+//   const isPasswordCorrect = bcrypt.compareSync(
+//     password,
+//     isAdminExists.password
+//   );
+//   if (!isPasswordCorrect) {
+//     console.log("password is wrong");
+//     return next(new AppError(err, 400));
+//   }
+//   // const millisecondsPerDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
+//   // const expirationInMilliseconds = parseInt(JWT_EXPIRY_TIME) * millisecondsPerDay;
+//   const { token } = generateJWTToken(isAdminExists._id);
+//   const { refreshToken, expirationInMilliseconds } = generateRefreshToken(isAdminExists._id)
+//   return res
+//     .status(200)
+//     .cookie("token", token, {
+//       expires: new Date(Date.now() + expirationInMilliseconds),
+//       httpOnly: true,
+//       sameSite: "none",
+//       // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+//       secure: true,
+//     })
+//     .cookie('refreshToken', refreshToken, {
+//       expires: new Date(Date.now() + expirationInMilliseconds),
+//       httpOnly: true,
+//       sameSite: 'none',
+//       secure: true,
+//     })
+//     .json({ status: true, user: isAdminExists, token: token, refreshToken:refreshToken });
+// });
 
 // add admin
 exports.addAdmin = catchAsync(async (req, res, next) => {
@@ -347,8 +393,8 @@ exports.changeCommentStatus = catchAsync(async (req, res, next) => {
 
 exports.searchNews = searchNewsOrVideos(contentModel);
 exports.searchVideos = searchNewsOrVideos(videoModel);
-exports.changeContentStatus = disableFunction(contentModel);
-// exports.changeVideoStatus = disableFunction(videoModel);
+exports.changeContentStatus = disableOnEnableFunction(contentModel);
+// exports.changeVideoStatus = disableOnEnableFunction(videoModel);
 
 // // add video
 // exports.addVideo = catchAsync(async (req, res, next) => {
@@ -605,7 +651,7 @@ exports.getSingleUser = catchAsync(async (req, res, next) => {
 });
 
 // disable user
-exports.disableUser = disableFunction(userModel);
+exports.disableUser = disableOnEnableFunction(userModel);
 
 // change order
 exports.changeOrder = changeOrder();

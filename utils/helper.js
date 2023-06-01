@@ -1,6 +1,6 @@
 //for making regex search query
 const jwt = require("jsonwebtoken");
-const { JWT_SECRETE_KEY, JWT_EXPIRY_TIME } = require("../config/config");
+const { JWT_SECRETE_KEY, JWT_EXPIRY_TIME, REFRESH_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY} = require("../config/config");
 const topContentModel = require("../models/topContentModel");
 const AppError = require("./appError");
 const catchAsync = require("./catchAsync");
@@ -18,35 +18,61 @@ const searchQuery = (query, fieldName) => {
   return QStringList;
 };
 
-const generateJWTToken = (userId, initialTime, refreshTime) => {
+const generateJWTToken = (userId) => {
   const token = jwt.sign({ userId: userId }, JWT_SECRETE_KEY, {
-    expiresIn: initialTime,
+    expiresIn: JWT_EXPIRY_TIME,
   });
-  // const refreshToken = jwt.sign({ userId: userId }, JWT_SECRETE_KEY, {
-  //   expiresIn: refreshTime,
-  // });
+
+  const millisecondsPerDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
+  const expirationInMilliseconds = parseInt(REFRESH_TOKEN_EXPIRY) * millisecondsPerDay;
 
   return {
     token,
-    // refreshToken,
+    expirationInMilliseconds
   };
 };
 
-const disableFunction = (model) => {
+// Generate Refresh Token
+const generateRefreshToken = (userId) => {
+  const refreshToken = jwt.sign({ userId: userId }, REFRESH_TOKEN_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
+
+  const millisecondsPerDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
+  const expirationInMilliseconds = parseInt(REFRESH_TOKEN_EXPIRY) * millisecondsPerDay;
+
+  return {
+    refreshToken,
+    expirationInMilliseconds
+  };
+};
+
+
+const disableOnEnableFunction = (model) => {
   return catchAsync(async (req, res, next) => {
     const { _id } = req.body;
-    const disableData = await model.findOneAndUpdate(
-      { _id },
-      { $set: { isActive: false } }
-    );
-    if (!disableData) {
+
+    const data = await model.findById(_id)
+    if (!data) {
       return next(new AppError("Something went wrong.", 500));
     }
+
+    let done
+    if(isActive==true){
+      isActive=false
+      done = "disabled"
+    }else{
+      isActive=true
+      done = "enabled"
+    }
+    await data.save();
+
     return res
       .status(200)
-      .json({ status: true, message: "Successfully disabled." });
+      .json({ status: true, message: `Successfully ${done}.` });
   });
 };
+
 const isDate = (str) => {
   // Attempt to create a Date object from the string
   const date = new Date(str);
@@ -421,7 +447,8 @@ const decreaseContentOrder = (model) => {
 module.exports = {
   searchQuery,
   generateJWTToken,
-  disableFunction,
+  generateRefreshToken,
+  disableOnEnableFunction,
   isDate,
   searchNewsOrVideos,
   getData,

@@ -2,7 +2,7 @@ const testimonialModel = require("../../models/testimonials");
 const topContentModel = require("../../models/topContentModel");
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
-const { disableFunction, generateDate } = require("../../utils/helper");
+const { disableOnEnableFunction, generateDate } = require("../../utils/helper");
 
 exports.addTestimonials = catchAsync(async (req, res, next) => {
   const { name, position, image, testimonial } = req.body;
@@ -140,4 +140,4 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
 });
 
 // disable testimonials
-exports.disableTestimonials = disableFunction(testimonialModel);
+exports.disableTestimonials = disableOnEnableFunction(testimonialModel);
