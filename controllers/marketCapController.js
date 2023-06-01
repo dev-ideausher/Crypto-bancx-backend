@@ -2,7 +2,7 @@ const catchAsync = require("../utils/catchAsync");
 const { default: axios } = require("axios");
 const { CRYPTO_TRACKER_URL } = require("../config/config");
 const watchListModel = require("../models/watchlistModel");
-const CC = require('currency-converter-lt')
+// const CC = require('currency-converter-lt')
 
 const marketCapModel = require("../models/marketCapModel")
 
@@ -191,17 +191,17 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 // crypto tracker
 exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
   const { page, limit ,currecncy} = req.query;
-  let isUsd 
+  // let isUsd 
   // let currencyConverter
   //USD GBP INR EUR
- const currencyUC = currecncy.toUpperCase();
-if (currencyUC == "USD"){
-  isUsd=true;
-}else{
-  isUsd=false;
+//  const currencyUC = currecncy.toUpperCase();
+// if (currencyUC == "USD"){
+//   isUsd=true;
+// }else{
+//   isUsd=false;
   // currencyConverter = new CC({from:"USD", to:"INR" })
-}
-let currencyConverter = new CC({from:"USD", to:"INR" })
+// }
+// let currencyConverter = new CC({from:"USD", to:"INR" })
   // "current_price": 26307,
   // "price_change_percentage_24h": -3.49518,
   // "market_cap": 512341577581
@@ -247,8 +247,8 @@ let currencyConverter = new CC({from:"USD", to:"INR" })
   //   }
   // }
 
-let i=0
-let convertedMarketCap = []
+// let i=0
+// let convertedMarketCap = []
 // if (!isUsd) {
 //   console.log("worling")
 //   convertedMarketCap = marketCap.map(async (e) => {
@@ -292,7 +292,7 @@ let convertedMarketCap = []
   return res.status(200).json({
         status: true, 
         totalPages: totalPages, 
-        cryptoData: convertedMarketCap
+        cryptoData: marketCap
   });
 })
 
