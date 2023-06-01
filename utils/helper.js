@@ -59,10 +59,10 @@ const disableOnEnableFunction = (model) => {
 
     let done
     if(isActive==true){
-      isActive=false
+      data.isActive=false
       done = "disabled"
     }else{
-      isActive=true
+      data.isActive=true
       done = "enabled"
     }
     await data.save();
