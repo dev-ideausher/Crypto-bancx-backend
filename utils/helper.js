@@ -354,6 +354,8 @@ const setTop = () => {
 const permanentDeleteTopContent = (model) => {
   return catchAsync(async (req, res, next) => {
     const { _id, type } = req.query;
+    console.log("top req query _id",_id)
+    console.log("top req query type",type)
     const current = await model.findById(_id);
     if (!current) {
       return next(new AppError("Invalid data", 500));

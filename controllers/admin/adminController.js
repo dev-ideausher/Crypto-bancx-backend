@@ -439,7 +439,16 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
   if(topContent){
     req.query._id = topContent._id;
     req.query.type = "blog"
-    permanentDeleteTopContent(topContentModel);
+    await new Promise((resolve, reject) => {
+      permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   return res
@@ -457,8 +466,17 @@ exports.deleteNews = catchAsync(async (req, res, next) => {
   let topContent = await topContentModel.findOne({contentId:_id})
   if(topContent){
     req.query._id = topContent._id;
-    req.query.type = "news"
-    permanentDeleteTopContent(topContentModel);
+    req.query.type = "news";
+    await new Promise((resolve, reject) => {
+      permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   return res
