@@ -107,15 +107,9 @@ exports.allVideos = catchAsync(async (req, res, next) => {
       return next(new AppError("Invalid duration", 500));
     }
     let filter = {
-      $and: [
-        { createdAt: { $gte: firstDay } },
-        { createdAt: { $lt: lastDay } },
-        { type: "video" },
-      ],
+        createdAt: { $gte: firstDay , $lt: lastDay },
+        type: "video" ,
     };
-    if (status && status !== "all") {
-      filter.isActive = status;
-    }
   
     const videos = await topContentModel.find(filter)
     .populate({
@@ -126,11 +120,27 @@ exports.allVideos = catchAsync(async (req, res, next) => {
             }
         })
     .sort({ priority: -1 })
+
+    let filteredVideos
+
+    if (status && status !== "all") {
+      if(status == "true"){
+        filter.isActive = true
+      }else if(status == "false"){
+        filter.isActive = false
+      }
+      filteredVideos = videos.filter(video=>{
+        return(video.contentId.isActive ==filter.isActive)
+      })
+    }else if(status == "all"){
+      filteredVideos = videos
+    }
   
     return res.status(200).json({
       status: true,
+      result: filteredVideos.length,
       message: "videos found.",
-      allVideos: videos,
+      allVideos: filteredVideos,
     });
   });
 

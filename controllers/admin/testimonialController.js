@@ -119,23 +119,43 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
   if (!isSuccess) {
     return next(new AppError("Invalid duration", 500));
   }
+  // let filter = {
+  //   $and: [
+  //     { createdAt: { $gte: firstDay , $lt: lastDay } },
+  //     { type: "testimonial" },
+  //   ],
+  // };
+
   let filter = {
-    $and: [
-      { createdAt: { $gte: firstDay } },
-      { createdAt: { $lt: lastDay } },
-      { type: "testimonial" },
-    ],
+    createdAt: { $gte: firstDay , $lt: lastDay },
+    type: "testimonial"
   };
-  if (status && status !== "all") {
-    filter.isActive = status;
-  }
+  // console.log("status",typeof status)
+
 
   const testimonials = await topContentModel.find(filter).populate("contentId").sort({ priority: -1 });
 
+  let filteredTestimonials
+
+  if (status && status !== "all") {
+    if(status == "true"){
+      filter.isActive = true
+    }else if(status == "false"){
+      filter.isActive = false
+    }
+    filteredTestimonials = testimonials.filter(testimonial=>{
+      return(testimonial.contentId.isActive ==filter.isActive)
+    })
+  }else if(status == "all"){
+    filteredTestimonials = testimonials
+  }
+
+
   return res.status(200).json({
     status: true,
+    result: filteredTestimonials.length,
     message: "Testimonials found.",
-    allTestimonials: testimonials,
+    allTestimonials: filteredTestimonials,
   });
 });
 

@@ -722,8 +722,7 @@ exports.allfeatureRequests = catchAsync(async (req, res, next) => {
   }
 
   let filter = {
-      createdAt: { $gte: firstDay },
-      createdAt: { $lt: lastDay },
+      createdAt: { $gte: firstDay , $lt: lastDay },
       type: "blog",
       onModel:"User",
   };
@@ -734,7 +733,7 @@ exports.allfeatureRequests = catchAsync(async (req, res, next) => {
 
   let featureRequests = await contentModel.find(filter).populate("author", "name email image").sort({createdAt:-1})
 
-  return res.status(200).json({ status: true, featureRequests: featureRequests });
+  return res.status(200).json({ status: true, result: featureRequests.length , featureRequests: featureRequests });
 });
 
 
