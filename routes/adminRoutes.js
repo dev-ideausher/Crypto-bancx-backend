@@ -89,6 +89,12 @@ router.delete(
   authController.validateToken(adminModel),
   adminController.deleteBlogs
 );
+
+router.delete(
+  "/delete-news",
+  authController.validateToken(adminModel),
+  adminController.deleteNews
+);
 router.get(
   "/content",
   authController.validateToken(adminModel),
