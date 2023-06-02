@@ -434,9 +434,36 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
   if (!deleteBlog.acknowledged || deleteBlog.deletedCount !== 1) {
     return next(new AppError("Unable to delete blog", 500));
   }
+
+  let topContent = await topContentModel.findOne({contentId:_id})
+  if(topContent){
+    req.query._id = topContent._id;
+    req.query.type = "blog"
+    permanentDeleteTopContent(topContentModel);
+  }
+
   return res
     .status(200)
     .json({ status: true, message: "Blog has been deleted." });
+});
+
+exports.deleteNews = catchAsync(async (req, res, next) => {
+  const { _id } = req.query;
+  const deleteNews = await contentModel.deleteOne({ _id });
+  if (!deleteNews.acknowledged || deleteNews.deletedCount !== 1) {
+    return next(new AppError("Unable to delete News", 500));
+  }
+
+  let topContent = await topContentModel.findOne({contentId:_id})
+  if(topContent){
+    req.query._id = topContent._id;
+    req.query.type = "news"
+    permanentDeleteTopContent(topContentModel);
+  }
+
+  return res
+    .status(200)
+    .json({ status: true, message: "News has been deleted." });
 });
 
 // search blog function, its working.
