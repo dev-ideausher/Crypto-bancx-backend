@@ -2,16 +2,17 @@ const catchAsync = require("../utils/catchAsync");
 const { default: axios } = require("axios");
 const { CRYPTO_TRACKER_URL } = require("../config/config");
 const watchListModel = require("../models/watchlistModel");
-// const CC = require('currency-converter-lt')
+const CC = require('currency-converter-lt')
+const currencyModel = require('../models/currencyModel')
 
 const marketCapModel = require("../models/marketCapModel")
 
 
 const MAX_MARKET_LIMIT = 250
 
-// crypto tracker
+// crypto tracker with auth
 exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
-  const { page, limit } = req.query;
+  const { page, limit , currency} = req.query;
 
   const orderLImitMax = page * limit
   const orderLImitMin = (page * limit)-limit
@@ -30,10 +31,110 @@ exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
       };
     });
 
+  
+    let currencyVal = await currencyModel.findOne({})
+
+    switch (currency) {
+      case "INR":
+        cryptoData.forEach(async e=>{
+          e.data.current_price = e.data.current_price * currencyVal.INR;
+          // e.data.price_change_percentage_24h=price_change_percentage_24h;
+          e.data.market_cap = e.data.market_cap * currencyVal.INR;
+          // e.data.total_supply = e.data.total_supply * currencyVal.INR;
+          // e.data.circulating_supply = e.data.circulating_supply * currencyVal.INR;
+        })
+        
+        break;
+      case "GBP":      
+        cryptoData.forEach(async e=>{
+          e.data.current_price = e.data.current_price * currencyVal.GBP;
+          // e.data.price_change_percentage_24h=price_change_percentage_24h;
+          e.data.market_cap = e.data.market_cap * currencyVal.GBP;
+          // e.data.total_supply = e.data.total_supply * currencyVal.GBP;
+          // e.data.circulating_supply = e.data.circulating_supply * currencyVal.GBP;
+        })
+        break;
+      case "EUR":
+        cryptoData.forEach(async e=>{
+            e.data.current_price = e.data.current_price * currencyVal.EUR;
+            // e.data.price_change_percentage_24h=price_change_percentage_24h;
+            e.data.market_cap = e.data.market_cap * currencyVal.EUR;
+            // e.data.total_supply = e.data.total_supply * currencyVal.EUR;
+            // e.data.circulating_supply = e.data.circulating_supply * currencyVal.EUR;
+        })
+  
+        break;
+      default:
+        // Handle other currencies here if needed
+        break;
+    }
+
   return res.status(200).json({
         status: true, 
         totalPages: totalPages, 
         cryptoData: cryptoData
+  });
+})
+
+
+
+// crypto tracker with no auth
+exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
+  const { page, limit ,currency} = req.query;
+  //USD GBP INR EUR
+
+  const orderLImitMax = page * limit
+  const orderLImitMin = (page * limit)-limit
+  let filter = { order:{ $gt: orderLImitMin , $lte: orderLImitMax } }
+
+  let totalPages = Math.ceil(MAX_MARKET_LIMIT / limit)
+
+  let marketCap = await marketCapModel.find(filter).sort({order:1}).lean();
+
+  let currencyVal = await currencyModel.findOne({})
+
+  switch (currency) {
+    // case "USD":
+
+    //   break;
+    case "INR":
+      marketCap.forEach(async e=>{
+        e.data.current_price = e.data.current_price * currencyVal.INR;
+        // e.data.price_change_percentage_24h=price_change_percentage_24h;
+        e.data.market_cap = e.data.market_cap * currencyVal.INR;
+        // e.data.total_supply = e.data.total_supply * currencyVal.INR;
+        // e.data.circulating_supply = e.data.circulating_supply * currencyVal.INR;
+      })
+      
+      break;
+    case "GBP":      
+      marketCap.forEach(async e=>{
+        e.data.current_price = e.data.current_price * currencyVal.GBP;
+        // e.data.price_change_percentage_24h=price_change_percentage_24h;
+        e.data.market_cap = e.data.market_cap * currencyVal.GBP;
+        // e.data.total_supply = e.data.total_supply * currencyVal.GBP;
+        // e.data.circulating_supply = e.data.circulating_supply * currencyVal.GBP;
+      })
+      break;
+    case "EUR":
+      marketCap.forEach(async e=>{
+          e.data.current_price = e.data.current_price * currencyVal.EUR;
+          // e.data.price_change_percentage_24h=price_change_percentage_24h;
+          e.data.market_cap = e.data.market_cap * currencyVal.EUR;
+          // e.data.total_supply = e.data.total_supply * currencyVal.EUR;
+          // e.data.circulating_supply = e.data.circulating_supply * currencyVal.EUR;
+      })
+
+      break;
+    default:
+      // Handle other currencies here if needed
+      break;
+  }
+
+  return res.status(200).json({
+        status: true, 
+        totalPages: totalPages, 
+        cryptoData: marketCap
   });
 })
 
@@ -188,176 +289,49 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
   return res.status(200).json({ status: true, message: "", data: suggestion });
 })
 
-// crypto tracker
-exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
-  const { page, limit ,currecncy} = req.query;
-  // let isUsd 
-  // let currencyConverter
-  //USD GBP INR EUR
-//  const currencyUC = currecncy.toUpperCase();
-// if (currencyUC == "USD"){
-//   isUsd=true;
-// }else{
-//   isUsd=false;
-  // currencyConverter = new CC({from:"USD", to:"INR" })
-// }
-// let currencyConverter = new CC({from:"USD", to:"INR" })
-  // "current_price": 26307,
-  // "price_change_percentage_24h": -3.49518,
-  // "market_cap": 512341577581
-  // "total_supply": 21000000,
-  // "circulating_supply": 19382418,
 
-  const orderLImitMax = page * limit
-  const orderLImitMin = (page * limit)-limit
-  let filter = { order:{ $gt: orderLImitMin , $lte: orderLImitMax } }
 
-  let totalPages = Math.ceil(MAX_MARKET_LIMIT / limit)
 
-  let marketCap = await marketCapModel.find(filter).sort({order:1}).lean();
-
-  // if(!isUsd){
-  //   marketCap.forEach(async e=>{
-  //     const current_price = await currencyConverter.amount(e.data.current_price).convert();
-  //     e.data.current_price = current_price;
-  //     const price_change_percentage_24h = await currencyConverter.amount(e.data.price_change_percentage_24h).convert();
-  //     e.data.price_change_percentage_24h=price_change_percentage_24h;
-  //     const market_cap = await currencyConverter.amount(e.data.market_cap).convert();
-  //     e.data.market_cap = market_cap;
-  //     const total_supply = await currencyConverter.amount(e.data.total_supply).convert();
-  //     e.data.total_supply = total_supply;
-  //     const circulating_supply = await currencyConverter.amount(e.data.circulating_supply).convert();
-  //     e.data.circulating_supply = circulating_supply;
-  //   })
-  // }
-
-  // const convertToInteger = async (converter, value) => {
-  //   const convertedValue = await converter.amount(value).convert();
-  //   return parseInt(convertedValue, 10);
-  // };
-
+exports.graphOhlc = catchAsync(async (req, res, next) => {
+    let {id,days,currency} = req.query
   
-  // if (!isUsd) {
-  //   for (const e of marketCap) {
-  //     e.data.current_price = await convertToInteger(currencyConverter, e.data.current_price);
-  //     e.data.price_change_percentage_24h = await convertToInteger(currencyConverter, e.data.price_change_percentage_24h);
-  //     e.data.market_cap = await convertToInteger(currencyConverter, e.data.market_cap);
-  //     e.data.total_supply = await convertToInteger(currencyConverter, e.data.total_supply);
-  //     e.data.circulating_supply = await convertToInteger(currencyConverter, e.data.circulating_supply);
-  //   }
-  // }
-
-// let i=0
-// let convertedMarketCap = []
-// if (!isUsd) {
-//   console.log("worling")
-//   convertedMarketCap = marketCap.map(async (e) => {
-//     console.log("e.data.current_price",typeof e.data.current_price)
-//     let i= 45
-//     console.log("i",typeof i)
-//     const current_price = await currencyConverter.amount(400).convert();
-//     console.log("current_price",current_price)
-//     e.data.current_price = current_price; // Convert back to an integer
-
-//     let price_change_percentage_24h = e.data.price_change_percentage_24h;
-//     if (price_change_percentage_24h < 0) {
-//       // Convert negative percentage to positive for conversion
-//       price_change_percentage_24h = Math.abs(price_change_percentage_24h);
-//     }
-//     const converted_price_change_percentage_24h = await currencyConverter.amount(price_change_percentage_24h).convert();
-//     e.data.price_change_percentage_24h = Math.round(converted_price_change_percentage_24h); // Convert back to an integer
-
-//     let market_cap = e.data.market_cap;
-//     if (market_cap < 0) {
-//       // Convert negative percentage to positive for conversion
-//       market_cap = Math.abs(market_cap);
-//     }
-//     const converted_market_cap = await currencyConverter.amount(market_cap).convert();
-//     e.data.market_cap = Math.round(converted_market_cap); // Convert back to an integer
-
-//     // const total_supply = await currencyConverter.amount(Math.abs(e.data.total_supply)).convert();
-//     // e.data.total_supply = Math.round(total_supply); // Convert back to an integer
-
-//     // const circulating_supply = await currencyConverter.amount(e.data.circulating_supply).convert();
-//     // e.data.circulating_supply = Math.round(circulating_supply); // Convert back to an integer
-//     if(e.order==1){
-//       console.log("e",e)
-//     }
-
-//     return e;
-//   });
-// }
-
-
-  return res.status(200).json({
-        status: true, 
-        totalPages: totalPages, 
-        cryptoData: marketCap
-  });
-})
-
-
-// const marketCapController = async () => {
-
-//     const totalLimitGiven = 250;//200 vvvvv
-//     // const totalPages = 43;
-//     let page = 1;
-//     let order = 0;
+    let ohlc = await axios.get(
+      `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
+    )
   
-//     const bulkOps = [];
-//     while (page) {
-//       try {
-//         const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
-//           params: {
-//             vs_currency: 'usd',
-//             order: 'market_cap_desc',
-//             per_page: totalLimitGiven,
-//             page: page,
-//             sparkline: false,
-//             price_change_percentage: '1h,24h,7d',
-//             locale: 'en',
-//           },
-//         });
+    return res.status(200).json({
+      status: true, 
+      cryptoData:  ohlc.data
+    });
+  })
   
-//         const marketCapData = response.data.map((item) => ({
-//           order: ++order,
-//           marketCapId: item.id,
-//           data: item,
-//         }));
+  exports.graphMarketRange = catchAsync(async (req, res, next) => {
+    let {id,from,to,currency} = req.query
   
-//         // Upsert the data
-//         await Promise.all(
-//           marketCapData.map(async (item) => {
-//             await marketCapModel.findOneAndUpdate(
-//               { marketCapId: item.marketCapId },
-//               item,
-//               { upsert: true }
-//             );
-//           })
-//         );
+    let marketRange = await axios.get(
+      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
+    )
   
-//         // if (page % 6 === 0) {
-//         //   await new Promise((resolve) => {
-//         //     setTimeout(resolve, 60 * 1000);
-//         //   });
-//         // }
+    return res.status(200).json({
+      status: true, 
+      cryptoData:  marketRange.data
+    });
+  })
   
-//         // Move to the next page
-//         // console.log(page)
-//         // if (page == 43){
-//         //   console.log(finished)
-//         // }
-//         // page++;
-//       } catch (error) {
-//         // Wait for 1 minute before retrying the same page
-//         console.log(error.response.status,error.response.statusText)
-//         await new Promise((resolve) => {
-//           setTimeout( resolve, 1 * 60 * 1000);
-//         });
-//       }
-//     }
-//   };
-
+  
+  
+  exports.graphMarketChart = catchAsync(async (req, res, next) => {
+    let {id,days,currency} = req.query
+  
+    let totalData = await axios.get(
+      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
+    )
+  
+    return res.status(200).json({
+      status: true, 
+      cryptoData:  totalData.data
+    });
+  })
 
 
   const marketCapController = async () => {
@@ -437,266 +411,45 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
   setInterval(marketCapController, 60 * 60 * 1000);
 
 
-  exports.graphOhlc = catchAsync(async (req, res, next) => {
-    let {id,days,currency} = req.query
+  const currencyChecker = async () => {
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryInterval = 60 * 60 * 1000; // 1 hour
   
-    let ohlc = await axios.get(
-      `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
-    )
+    while (retryCount < maxRetries) {
+      try {
+        let inrConversion = new CC({ from: "USD", to: "INR" });
+        let inr = await inrConversion.amount(1).convert();
+        let eurConversion = new CC({ from: "USD", to: "EUR" });
+        let eur = await eurConversion.amount(1).convert();
+        let gbpConversion = new CC({ from: "USD", to: "GBP" });
+        let gbp = await gbpConversion.amount(1).convert();
+        console.log("inr", inr, "eur", eur, "gbp", gbp);
   
-    return res.status(200).json({
-      status: true, 
-      cryptoData:  ohlc.data
-    });
-  })
+        let currency = await currencyModel.findOne();
+        if (!currency) {
+          currency = await currencyModel.create({
+            INR: inr,
+            EUR: eur,
+            GBP: gbp,
+          });
+        } else {
+          currency.INR = inr;
+          currency.EUR = eur;
+          currency.GBP = gbp;
+          await currency.save();
+        }
+        console.log("finish currency");
   
-  exports.graphMarketRange = catchAsync(async (req, res, next) => {
-    let {id,from,to,currency} = req.query
+        // Break the loop if the currency conversion and save are successful
+        break;
+      } catch (error) {
+        retryCount++;
+        console.log("Currency conversion failed. Retrying in 1 minute...");
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+      }
+    }
+  };
   
-    let marketRange = await axios.get(
-      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
-    )
-  
-    return res.status(200).json({
-      status: true, 
-      cryptoData:  marketRange.data
-    });
-  })
-  
-  
-  
-  exports.graphMarketChart = catchAsync(async (req, res, next) => {
-    let {id,days,currency} = req.query
-  
-    let totalData = await axios.get(
-      `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
-    )
-  
-    return res.status(200).json({
-      status: true, 
-      cryptoData:  totalData.data
-    });
-  })
-
-
-// // crypto tracker
-// exports.cryptoMarketsApi = catchAsync(async (req, res, next) => {
-//   const { page, limit } = req.query;
-
-//   const totalPagesGiven = 108
-//   const totalLimitGiven = 100
-
-//   axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
-//     params: {
-//       vs_currency: 'usd',
-//       order: 'market_cap_desc',
-//       per_page: totalLimitGiven,
-//       page: page,
-//       sparkline: false,
-//       price_change_percentage: '1h,24h,7d',
-//       locale: 'en',
-//     },
-//   }).then(async (response) => {
-//     const data = response.data;
-//     const watchListedIds = await watchListModel.find({ userId: req.user._id }).distinct('id');
-//     const cryptoData = data.map((item) => {
-//       const isWishListed = watchListedIds.includes(item.id);
-//       return {
-//         ...item,
-//         isWishListed,
-//       };
-//     });
-  
-//     console.log("data")
-
-//     // store the data in the database
-//     const marketCap = await marketCapModel.create({
-//       page,
-//       data: data,
-//     });
-//     console.log("data1111",marketCap._id)
-
-//     return res.status(200).json({
-//       status: true, 
-//       totalPages:totalPagesGiven, 
-//       cryptoData: cryptoData 
-//     });
-
-//   }).catch(async (error) => {
-
-//     console.log("def")
-//     // check if there is any stored data for the given page and limit
-//     const cachedData = await marketCapModel.find({page:page}).sort({ createdAt: -1 }).limit(1).lean();
-//     if (cachedData) {
-//       const watchListedIds = await watchListModel.find({ userId: req.user._id }).distinct('id');
-//       const updatedData = cachedData[0].data.map((item) => {
-//         const isWishListed = watchListedIds.includes(item.id);
-//         return {
-//           ...item,
-//           isWishListed,
-//         };
-//       });
-
-//       return res.status(200).json({
-//         status: true, 
-//         totalPages: totalPagesGiven, 
-//         cryptoData: updatedData
-//       });
-//     }else{
-//       console.log("no cachedDAta")
-//       return res.status(200).json({
-//         status: true, 
-//         totalPages: totalPagesGiven, 
-//         cryptoData: []
-//       });
-//     }
-//   });
-// });
-
-  // const totalPagesGiven = 108
-  // const totalLimitGiven = 100
-  // const totalData = await axios.get(
-  //   `${CRYPTO_TRACKER_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${totalLimitGiven}&page=${totalPagesGiven}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en`
-  // );
-  // //found from the market cap
-  // let totalItems = totalPagesGiven * totalLimitGiven // 10,800
-  // let remainingVal = 100 - totalData.data.length
-  // totalItems = totalItems - remainingVal 
-  // let totalPages = Math.ceil(totalItems / limit)
-
-// // crypto tracker
-// exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
-//   const { page, limit } = req.query;
-//   // limit =100
-//   const totalPagesGiven = 108
-//   const totalLimitGiven = 100
-//   axios.get(
-//     `${CRYPTO_TRACKER_URL}/coins/markets`, {
-//       params: {
-//         vs_currency: 'usd',
-//         order: 'market_cap_desc',
-//         per_page: totalLimitGiven,
-//         page: page,
-//         sparkline: false,
-//         price_change_percentage: '1h,24h,7d',
-//         locale: 'en',
-//       },
-//     }).then(async (response) => {
-//       const data = response.data;
-//       console.log("data")
-
-//       // store the data in the database
-//       const marketCap = await marketCapModel.create({
-//         page,
-//         data: data,
-//       });
-//       console.log("data1111",marketCap)
-
-//       return res.status(200).json({
-//         status: true, 
-//         totalPages:totalPagesGiven, 
-//         cryptoData: data 
-//       });
-
-//     }).catch(async (error) => {
-//       console.log("def")
-//         // check if there is any stored data for the given page and limit
-//         const cachedData = await marketCapModel.find({page:page}).sort({ createdAt: -1 }).limit(1).lean();
-//         if (cachedData) {
-//           console.log("cachedDAta",cachedData)
-//           return res.status(200).json({
-//             status: true, 
-//             totalPages: totalPagesGiven, 
-//             cryptoData: cachedData[0].data 
-//           });
-//         }else{
-//           console.log("no cachedDAta")
-//           return res.status(200).json({
-//             status: true, 
-//             totalPages: totalPagesGiven, 
-//             cryptoData: []
-//           });
-//         }
-//     });
-// });
-
-
-
-// const marketCapController = async () => {
-//   const totalPages = 43;
-//   let order = 0;
-//   for (let page = 1; page <= totalPages; page++) {
-//     const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/markets`, {
-//       params: {
-//         vs_currency: 'usd',
-//         order: 'market_cap_desc',
-//         per_page: 250,
-//         page: page,
-//         sparkline: false,
-//         price_change_percentage: '1h,24h,7d',
-//         locale: 'en',
-//       },
-//     });
-
-//     const marketCapData = response.data.map((item) => ({
-//       order : ++order,
-//       marketCapId: item.id,
-//       data: item,
-//     }));
-
-//     // Upsert the data
-//     await Promise.all(
-//       marketCapData.map(async (item) => {
-//         await marketCapModel.findOneAndUpdate(
-//           { marketCapId: item.marketCapId },
-//           item,
-//           { upsert: true }
-//         );
-//       })
-//     );
-
-//     if (page % 6 === 0) {
-//       await new Promise((resolve) => {
-//         setTimeout(resolve, 60 * 1000);
-//       });
-//     }
-//   }
-// };
-
-
-
-
-
-// exports.graph = catchAsync(async (req, res, next) => {
-//   let {id,days,currency,type,from,to,outputType} = req.query
-
-//   let data ={}
-
-//   if(outputType == 1){
-//     let totalData = await axios.get(
-//       `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`
-//     )
-//     data.totalData=totalData
-//   }else if (outputType == 2){
-//     //from = 1682595000
-//     //to = 1682596227
-//     let marketRange = await axios.get(
-//       `${CRYPTO_TRACKER_URL}/coins/${id}/market_chart/range?vs_currency=${currency}&from=${from}&to=${to}`
-//     )
-//     data.marketRange=marketRange
-//   }else if (outputType== 3){
-//     let ohlc = await axios.get(
-//     `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
-//     )
-//     data.ohlc=ohlc
-//   }
-
-//   return res.status(200).json({
-//     status: true, 
-//     cryptoData:  data
-//   });
-// })
-
-
-
-
+  currencyChecker()
+  setInterval(currencyChecker, 24 * 60 * 60 * 1000); // Run once per day
