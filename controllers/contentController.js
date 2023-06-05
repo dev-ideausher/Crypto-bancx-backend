@@ -203,7 +203,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
   const { page, type, pageSize, contentId } = req.query;
   console.log("he")
   if (contentId) {
-    const dataExists = await redisClient.get(`latest?contentId=${contentId}`);
+    const dataExists = await redisClient.get(`latestById?contentId=${contentId}`);
     if (dataExists) {
 
       const {content,recommended} = JSON.parse(dataExists);
@@ -246,7 +246,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     }
 
     await redisClient.SETEX(
-      `latest?contentId=${contentId}`,
+      `latestById?contentId=${contentId}`,
       EXPIRY_TIME,
       JSON.stringify({content: content?._doc, recommended})
     );
@@ -286,7 +286,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     });
   }
   const content = await contentModel
-    .find({ type })
+    .find({ type : type , isActive:{$ne:false}})
     .sort({ createdAt: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize)

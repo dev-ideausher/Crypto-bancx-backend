@@ -1,0 +1,2 @@
+admin panel 9 th issue fixed
+26 - inactive news should'nt be visible on web

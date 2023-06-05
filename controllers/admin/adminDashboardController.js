@@ -152,7 +152,7 @@ const groupByWeek = (views, duration) => {
 
   // Initialize the view counts for each week
   for (let i = 1; i <= weekCount; i++) {
-    counts[`week${i}`] = 0;
+    counts[`Week ${i}`] = 0;
   }
 
   // Iterate over the views
@@ -177,14 +177,14 @@ const groupByWeek = (views, duration) => {
         console.log("weekIndex",weekIndex,"  view.createdAt", view.createdAt)
       }
 
-      counts[`week${weekIndex}`]++;
+      counts[`Week ${weekIndex}`]++;
     }
   });
 
   // Add the view counts to the result
   for (let i = 1; i <= weekCount; i++) {
-    result.views.push(counts[`week${i}`]);
-    result.data.push(`week${i}`);
+    result.views.push(counts[`Week ${i}`]);
+    result.data.push(`Week ${i}`);
   }
 
   return result;

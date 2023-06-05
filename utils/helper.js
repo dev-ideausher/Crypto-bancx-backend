@@ -66,6 +66,27 @@ const disableOnEnableFunction = (model) => {
       done = "enabled"
     }
 
+    if (model === contentModel) {
+      // Find and delete all cache keys that match the "latest" pattern
+      redisClient.keys("latest*", (err, keys) => {
+        if (err) {
+          console.error('Error retrieving cache keys from Redis:', err);
+          return next(new AppError("Error: Something went wrong.", 500));
+        }
+
+        // Delete the cache keys
+        keys.forEach((cacheKey) => {
+          redisClient.del(cacheKey, (err) => {
+            if (err) {
+              console.error('Error deleting cache from Redis:', err);
+              return next(new AppError("Error: Something went wrong.", 500));
+            }
+          });
+        });
+      });
+    }
+    
+
     return res
       .status(200)
       .json({ status: true, message: `Successfully ${done}.` });
