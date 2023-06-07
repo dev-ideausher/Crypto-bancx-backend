@@ -4,6 +4,8 @@ const { JWT_SECRETE_KEY, JWT_EXPIRY_TIME, REFRESH_TOKEN_SECRET, REFRESH_TOKEN_EX
 const topContentModel = require("../models/topContentModel");
 const AppError = require("./appError");
 const catchAsync = require("./catchAsync");
+const redisClient = require("../config/redis");
+
 
 const searchQuery = (query, fieldName) => {
   let QStringList = query.split(" ").map((s) => {
@@ -48,7 +50,7 @@ const generateRefreshToken = (userId) => {
 };
 
 
-const disableOnEnableFunction = (model) => {
+const disableOnEnableFunction = (model, isContentModel) => {
   return catchAsync(async (req, res, next) => {
     const { _id } = req.body;
 
@@ -66,13 +68,33 @@ const disableOnEnableFunction = (model) => {
       done = "enabled"
     }
 
-    if (model === contentModel) {
+    if (isContentModel) {
+      console.log("isContentModel",isContentModel)
+      // const keys = await redisClient.sendCommand(["keys","*"]);
+      // console.log("keys:",keys)
+
+
+
+
+    // redisScan({
+    //     redis: redisClient,
+    //     each_callback: function (type, key, subkey, value, cb) {
+    //         console.log(type, key, subkey, value);
+    //         cb();
+    //     },
+    //     done_callback: function (err) {
+    //         console.log("-=-=-=-=-=--=-=-=-",err);
+    //         redisClient.quit();
+    //     }
+    // });
       // Find and delete all cache keys that match the "latest" pattern
-      redisClient.keys("latest*", (err, keys) => {
+      redisClient.keys("latest?*", (err, keys) => {
         if (err) {
-          console.error('Error retrieving cache keys from Redis:', err);
+          console.log('Error retrieving cache keys from Redis:', err);
           return next(new AppError("Error: Something went wrong.", 500));
         }
+
+        console.log("keys",keys);
 
         // Delete the cache keys
         keys.forEach((cacheKey) => {

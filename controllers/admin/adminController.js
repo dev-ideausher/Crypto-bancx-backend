@@ -393,7 +393,7 @@ exports.changeCommentStatus = catchAsync(async (req, res, next) => {
 
 exports.searchNews = searchNewsOrVideos(contentModel);
 exports.searchVideos = searchNewsOrVideos(videoModel);
-exports.changeContentStatus = disableOnEnableFunction(contentModel);
+exports.changeContentStatus = disableOnEnableFunction(contentModel,true);
 // exports.changeVideoStatus = disableOnEnableFunction(videoModel);
 
 // // add video
