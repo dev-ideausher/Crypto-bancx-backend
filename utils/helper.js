@@ -2,6 +2,11 @@
 const jwt = require("jsonwebtoken");
 const { JWT_SECRETE_KEY, JWT_EXPIRY_TIME, REFRESH_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY} = require("../config/config");
 const topContentModel = require("../models/topContentModel");
+
+const contentModel = require("../models/contentModel");
+const testimonialModel = require("../models/testimonials");
+const videoModel = require("../models/videoModel");
+
 const AppError = require("./appError");
 const catchAsync = require("./catchAsync");
 const redisClient = require("../config/redis");
@@ -429,14 +434,47 @@ const permanentDeleteTopContent = (model) => {
 // add to top content
 const addToTopContent = (model) => {
   return catchAsync(async (req, res, next) => {
+
     const { type, contentId } = req.body;
+
+    // "blog", "news", "video", "testimonial"
+
+    //contentId validation
+
+    let content;
+    switch (type) {
+      case 'blog':
+        content = await contentModel.findById(contentId);
+        break;
+      case 'news':
+        content = await contentModel.findById(contentId);
+        break;
+      case 'video':
+        content = await contentModel.findById(contentId);
+        break;
+      case 'testimonial':
+        content = await contentModel.findById(contentId);
+        break;
+      default:
+        return next(new AppError('Error: Invalid content type.', 400));
+    }
+    if (!content) {
+      return next(new AppError('Error: Invalid content Id.', 400));
+    }else if(content.isActive != true){
+      return next(new AppError(`Error: Can't make inActive ${type} as top post`, 400));
+    }
+
+  
     let [leastPriority] = await model
       .find({ type })
       .sort({ priority: -1 })
       .limit(1);
+
+
     if (!leastPriority) {
       leastPriority = { priority: 0 };
     }
+
     const addContent = await model.create({
       contentId,
       type,
@@ -445,6 +483,14 @@ const addToTopContent = (model) => {
     if (!addContent) {
       return next(new AppError("Unable to save data", 500));
     }
+
+    (async () => {
+      let keysToDelete = `top-content/${type}`;
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    })();
+
     return res.status(200).json({ status: true, message: "data saved" });
   });
 };
