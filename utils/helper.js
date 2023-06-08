@@ -77,6 +77,24 @@ const disableOnEnableFunction = (model, modelType) => {
 
     switch (modelType) {
       case 'content':
+        if(done == 'disabled'){
+          let topContent = await topContentModel.findOne({contentId:_id})
+          if(topContent){
+            req.query._id = topContent._id;
+            req.query.type = data.type
+            await new Promise((resolve, reject) => {
+              permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+                if (error) {
+                  console.log(error);
+                  reject(error);
+                } else {
+                  resolve();
+                }
+              });
+            });
+          }
+        }
+
 
         const options = {
           TYPE: 'string', // `SCAN` only
@@ -104,6 +122,23 @@ const disableOnEnableFunction = (model, modelType) => {
         })();
         break;
       case 'video':
+        if(done == 'disabled'){
+          let topContent = await topContentModel.findOne({contentId:_id})
+          if(topContent){
+            req.query._id = topContent._id;
+            req.query.type = 'video'
+            await new Promise((resolve, reject) => {
+              permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+                if (error) {
+                  console.log(error);
+                  reject(error);
+                } else {
+                  resolve();
+                }
+              });
+            });
+          }
+        }
 
         (async () => {
           let keysToDelete = 'top-content/video';
@@ -114,6 +149,23 @@ const disableOnEnableFunction = (model, modelType) => {
 
         break;
       case 'testimonial':
+        if(done == 'disabled'){
+          let topContent = await topContentModel.findOne({contentId:_id})
+          if(topContent){
+            req.query._id = topContent._id;
+            req.query.type = 'testimonial'
+            await new Promise((resolve, reject) => {
+              permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+                if (error) {
+                  console.log(error);
+                  reject(error);
+                } else {
+                  resolve();
+                }
+              });
+            });
+          }
+        }
         (async () => {
           let keysToDelete = 'top-content/testimonial';
         

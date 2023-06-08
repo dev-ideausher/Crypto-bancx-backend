@@ -451,6 +451,36 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
     });
   }
 
+  const options = {
+    TYPE: 'string', // `SCAN` only
+    MATCH: 'latest?*',
+    COUNT: 100
+  };
+
+
+  const scanIterator = redisClient.scanIterator(options);
+  let keysToDelete = [];
+
+  (async () => {
+    for await (const key of scanIterator) {
+      keysToDelete.push(key);
+    }
+  
+    console.log('Keys to delete:', keysToDelete);
+  
+    const deletedCount = await redisClient.del(keysToDelete);
+    console.log(`Deleted ${deletedCount} keys.`);
+
+    if(topContent){
+      let contentKey = 'top-content/blog';
+  
+      const deletedContent = await redisClient.del(contentKey);
+      console.log(`Deleted ${deletedContent} keys.`);
+    }
+  })();
+
+
+
   return res
     .status(200)
     .json({ status: true, message: "Blog has been deleted." });
@@ -478,6 +508,32 @@ exports.deleteNews = catchAsync(async (req, res, next) => {
       });
     });
   }
+
+  const options = {
+    TYPE: 'string', // `SCAN` only
+    MATCH: 'latest?*',
+    COUNT: 100
+  };
+
+  const scanIterator = redisClient.scanIterator(options);
+  let keysToDelete = [];
+
+  (async () => {
+    for await (const key of scanIterator) {
+      keysToDelete.push(key);
+    }
+  
+    console.log('Keys to delete:', keysToDelete);
+  
+    const deletedCount = await redisClient.del(keysToDelete);
+    console.log(`Deleted ${deletedCount} keys.`);
+    if(topContent){
+      let contentKey = 'top-content/news';
+        
+      const deletedContent = await redisClient.del(contentKey);
+      console.log(`Deleted ${deletedContent} keys.`);
+    }
+  })();
 
   return res
     .status(200)
