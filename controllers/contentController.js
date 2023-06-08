@@ -276,7 +276,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     return next(new AppError("Something is wrong", 500));
   }
   const dataExists = await redisClient.get(
-    `latest?page=${page}&pageSize=${pageSize}`
+    `latest?type=${type}&page=${page}&pageSize=${pageSize}`
   );
   if (dataExists) {
     return res.status(200).json({
@@ -286,7 +286,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     });
   }
   const content = await contentModel
-    .find({ type : type , isActive:{$ne:false}})
+    .find({ type : type , isActive:{$ne:false} ,isDeleted:{$ne:true}})
     .sort({ createdAt: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize)
@@ -296,7 +296,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
   const total = (await contentModel.find()).length;
 
   await redisClient.SETEX(
-    `latest?page=${page}&pageSize=${pageSize}`,
+    `latest?type=${type}&page=${page}&pageSize=${pageSize}`,
     EXPIRY_TIME,
     JSON.stringify(content)
   );

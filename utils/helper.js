@@ -7,6 +7,7 @@ const catchAsync = require("./catchAsync");
 const redisClient = require("../config/redis");
 
 
+
 const searchQuery = (query, fieldName) => {
   let QStringList = query.split(" ").map((s) => {
     var o = {};
@@ -50,6 +51,7 @@ const generateRefreshToken = (userId) => {
 };
 
 
+
 const disableOnEnableFunction = (model, isContentModel) => {
   return catchAsync(async (req, res, next) => {
     const { _id } = req.body;
@@ -59,7 +61,7 @@ const disableOnEnableFunction = (model, isContentModel) => {
       return next(new AppError("Something went wrong.", 500));
     }
 
-    let done
+    let done 
     if(data.isActive==true){
       const data = await model.findByIdAndUpdate(_id,{isActive:false},{new:true})
       done = "disabled"
@@ -70,42 +72,27 @@ const disableOnEnableFunction = (model, isContentModel) => {
 
     if (isContentModel) {
       console.log("isContentModel",isContentModel)
-      // const keys = await redisClient.sendCommand(["keys","*"]);
-      // console.log("keys:",keys)
 
+      const options = {
+        TYPE: 'string', // `SCAN` only
+        MATCH: 'latest?*',
+        COUNT: 100
+      };
 
+      const scanIterator = redisClient.scanIterator(options);
+      let keysToDelete = [];
 
-
-    // redisScan({
-    //     redis: redisClient,
-    //     each_callback: function (type, key, subkey, value, cb) {
-    //         console.log(type, key, subkey, value);
-    //         cb();
-    //     },
-    //     done_callback: function (err) {
-    //         console.log("-=-=-=-=-=--=-=-=-",err);
-    //         redisClient.quit();
-    //     }
-    // });
-      // Find and delete all cache keys that match the "latest" pattern
-      redisClient.keys("latest?*", (err, keys) => {
-        if (err) {
-          console.log('Error retrieving cache keys from Redis:', err);
-          return next(new AppError("Error: Something went wrong.", 500));
+      (async () => {
+        for await (const key of scanIterator) {
+          keysToDelete.push(key);
         }
-
-        console.log("keys",keys);
-
-        // Delete the cache keys
-        keys.forEach((cacheKey) => {
-          redisClient.del(cacheKey, (err) => {
-            if (err) {
-              console.error('Error deleting cache from Redis:', err);
-              return next(new AppError("Error: Something went wrong.", 500));
-            }
-          });
-        });
-      });
+      
+        console.log('Keys to delete:', keysToDelete);
+      
+        const deletedCount = await redisClient.del(keysToDelete);
+        console.log(`Deleted ${deletedCount} keys.`);
+      })();
+      
     }
     
 
