@@ -19,6 +19,9 @@ const requiresAuth = async (req, res, next) => {
     return;
   }
   let user = await User.findOne({ firebaseUid: decodedIdToken.uid });
+  if(user.isActive != true){
+    return next(new AppError("Error: Suspended user account", 401));
+  }
   if (!user) {
     if (req.path === "/onboarding") {
       if (decodedIdToken.firebase.sign_in_provider === "phone") {
