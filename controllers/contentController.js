@@ -105,8 +105,36 @@ exports.updateContent = catchAsync(async (req, res, next) => {
     },
     { new: true }
   );
-  if (!updatedContent)
+  if (!updatedContent){
     return next(new AppError("Couldn't update content.", 500));
+  }
+
+
+    const options = {
+      TYPE: 'string', // `SCAN` only
+      MATCH: `latest?type=${updatedContent.type}*`,
+      COUNT: 100
+    };
+  
+    const scanIterator = redisClient.scanIterator(options);
+    let keysToDelete = [];
+  
+    (async () => {
+      for await (const key of scanIterator) {
+        keysToDelete.push(key);
+      }
+    
+      console.log('Keys to delete:', keysToDelete);
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+  
+      let contentKey = `top-content/${updatedContent.type}`;
+    
+      const deletedContent = await redisClient.del(contentKey);
+      console.log(`Deleted ${deletedContent} keys.`);
+    })();
+  
   return res.status(200).json({
     status: true,
     content: updatedContent,
