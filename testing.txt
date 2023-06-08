@@ -4,8 +4,8 @@ admin panel 9 th issue fixed
 
 top nwe can add duplicate
 add post content not visible
-post is inactive it shouldnt be shown in top post
-video issue edit
-video status
-priority no limit
+-post is inactive it shouldnt be shown in top post
+-video issue edit
+-video status
+-priority no limit
 

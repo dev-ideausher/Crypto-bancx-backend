@@ -10,8 +10,6 @@ const videoModel = require("../../models/videoModel");
 const topContentModel = require("../../models/topContentModel");
 const redisClient = require("../../config/redis");
 
-const EXPIRY_TIME = 3600;
-
 
 
 // add video

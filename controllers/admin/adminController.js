@@ -25,6 +25,7 @@ const userModel = require("../../models/userModel");
 const videoModel = require("../../models/videoModel");
 const firebase = require("firebase-admin");
 const topContentModel = require("../../models/topContentModel");
+const redisClient = require("../../config/redis");
 require("../../firebase/firebaseConfig");
 
 // admin register

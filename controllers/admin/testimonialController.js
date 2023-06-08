@@ -3,6 +3,7 @@ const topContentModel = require("../../models/topContentModel");
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const { disableOnEnableFunction, generateDate } = require("../../utils/helper");
+const redisClient = require("../../config/redis");
 
 exports.addTestimonials = catchAsync(async (req, res, next) => {
   const { name, position, image, testimonial } = req.body;
