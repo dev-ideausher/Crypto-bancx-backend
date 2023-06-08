@@ -203,7 +203,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
   const { page, type, pageSize, contentId } = req.query;
   console.log("he")
   if (contentId) {
-    const dataExists = await redisClient.get(`latestById?contentId=${contentId}`);
+    const dataExists = await redisClient.get(`getByContentId=${contentId}`);
     if (dataExists) {
 
       const {content,recommended} = JSON.parse(dataExists);
@@ -246,7 +246,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     }
 
     await redisClient.SETEX(
-      `latestById?contentId=${contentId}`,
+      `getByContentId=${contentId}`,
       EXPIRY_TIME,
       JSON.stringify({content: content?._doc, recommended})
     );
@@ -416,6 +416,33 @@ exports.trending = catchAsync(async (req, res, next) => {
 exports.getTopContent = catchAsync(async (req, res, next) => {
   const { type, _id } = req.query;
   if (_id) {
+    const dataExists = await redisClient.get(`getByContentId=${_id}`);
+    if (dataExists) {
+
+      const {content,recommended} = JSON.parse(dataExists);
+
+      await viewsModel.create({
+        type:content.type,
+        itemId:_id,
+        onModel:"Content"
+      });
+  
+      let contentAfter = await contentModel.findByIdAndUpdate(
+        _id,
+        {$inc: {ViewCount: 1}},
+        {new: true}
+      );
+    
+      console.log("viewCount",contentAfter.ViewCount)
+
+      return res.status(200).json({
+        status: true,
+        message: "Data found from redis",
+        content: content,
+        recommended:recommended,
+      });
+    }
+
     const content = await contentModel
       .findById(_id)
       .populate("tags")
@@ -431,6 +458,24 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     }else if (content.type=="news"){
       recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({createdAt:-1}).limit(5);
     }
+
+    await redisClient.SETEX(
+      `getByContentId=${_id}`,
+      EXPIRY_TIME,
+      JSON.stringify({content: content?._doc, recommended})
+    );
+
+    await viewsModel.create({
+      type:content.type,
+      itemId:_id,
+      onModel:"Content"
+    });
+
+    let contentAfter = await contentModel.findByIdAndUpdate(
+      _id,
+      {$inc: {ViewCount: 1}},
+      {new: true}
+    );
 
     return res.status(200).json({ status: true, message: "", data: content , recommended: recommended });
   }
@@ -465,6 +510,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     EXPIRY_TIME,
     JSON.stringify(topContent)
   );
+
   return res.status(200).json({ status: true, message: "", data: topContent });
 });
 
@@ -482,7 +528,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
   }
 
   const video = await videoModel
-    .find({isActive:true,isApproved:true})
+    .find({isActive:true,isApproved:true,isDeleted:{$ne:true}})
     .limit(5)
     .sort({created_at:-1});
   return res.status(200).json({ status: true, message: "", data: video });

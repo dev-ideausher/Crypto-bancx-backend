@@ -52,7 +52,7 @@ const generateRefreshToken = (userId) => {
 
 
 
-const disableOnEnableFunction = (model, isContentModel) => {
+const disableOnEnableFunction = (model, isContentModel , isVideoModel) => {
   return catchAsync(async (req, res, next) => {
     const { _id } = req.body;
 
@@ -93,6 +93,17 @@ const disableOnEnableFunction = (model, isContentModel) => {
         console.log(`Deleted ${deletedCount} keys.`);
       })();
       
+    }
+
+    if (isVideoModel) {
+      console.log("isVideoModel",isVideoModel)
+
+      (async () => {
+        let keysToDelete = 'top-content/video';
+      
+        const deletedCount = await redisClient.del(keysToDelete);
+        console.log(`Deleted ${deletedCount} keys.`);
+      })();
     }
     
 

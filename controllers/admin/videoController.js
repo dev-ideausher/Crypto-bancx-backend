@@ -37,26 +37,37 @@ exports.addVideo = catchAsync(async (req, res, next) => {
       return next("Unable to save to top model", 500);
     }
 
-    let filter = {
-        path: "contentId",
-        populate: {
-          path: "author",
-          select: "name image email",
-        },
-        options: { strictPopulate: false },
-    };
+    // let filter = {
+    //     path: "contentId",
+    //     populate: {
+    //       path: "author",
+    //       select: "name image email",
+    //     },
+    //     options: { strictPopulate: false },
+    // };
       
-    const topContent = await topContentModel
-        .find({ type })
-        .populate(filter)
-        .limit(5)
-        .sort({ priority: -1 });
+    // const topContent = await topContentModel
+    //     .find({ type })
+    //     .populate(filter)
+    //     .limit(5)
+    //     .sort({ priority: -1 });
   
-    await redisClient.SETEX(
-       `top-content/${type}`,
-       EXPIRY_TIME,
-       JSON.stringify(topContent)
-    );
+    // // await redisClient.SETEX(
+    // //    `top-content/video`,
+    // //    EXPIRY_TIME,
+    // //    JSON.stringify(topContent)
+    // // );
+
+
+    // delete from redis
+    (async () => {
+      let keysToDelete = 'top-content/video';
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    })();
+
+
 
     return res.status(200).json({
       status: true,
@@ -81,6 +92,15 @@ exports.editVideo = catchAsync(async (req, res, next) => {
     if (!updatedVideo) {
       return next(new AppError("Something went wrong", 500));
     }
+
+    // delete from redis
+    (async () => {
+      let keysToDelete = 'top-content/video';
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    })();
+
     return res.status(200).json({
       status: true,
       message: "Video has been Updated.",
@@ -110,7 +130,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
         createdAt: { $gte: firstDay , $lt: lastDay },
         type: "video" ,
     };
-  
+ 
     const videos = await topContentModel.find(filter)
     .populate({
         path: 'contentId',
@@ -145,7 +165,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
   });
 
 
-exports.changeVideoStatus = disableOnEnableFunction(videoModel);
+exports.changeVideoStatus = disableOnEnableFunction(videoModel,false,true);
   
 //delete video
 exports.deleteVideo = catchAsync(async (req, res, next) => {
