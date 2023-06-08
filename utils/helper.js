@@ -57,7 +57,7 @@ const generateRefreshToken = (userId) => {
 
 
 
-const disableOnEnableFunction = (model, isContentModel , isVideoModel) => {
+const disableOnEnableFunction = (model, modelType) => {
   return catchAsync(async (req, res, next) => {
     const { _id } = req.body;
 
@@ -75,40 +75,55 @@ const disableOnEnableFunction = (model, isContentModel , isVideoModel) => {
       done = "enabled"
     }
 
-    if (isContentModel) {
-      console.log("isContentModel",isContentModel)
+    switch (modelType) {
+      case 'content':
 
-      const options = {
-        TYPE: 'string', // `SCAN` only
-        MATCH: 'latest?*',
-        COUNT: 100
-      };
+        const options = {
+          TYPE: 'string', // `SCAN` only
+          MATCH: 'latest?*',
+          COUNT: 100
+        };
+  
+        const scanIterator = redisClient.scanIterator(options);
+        let keysToDelete = [];
+  
+        (async () => {
+          for await (const key of scanIterator) {
+            keysToDelete.push(key);
+          }
+        
+          console.log('Keys to delete:', keysToDelete);
+        
+          const deletedCount = await redisClient.del(keysToDelete);
+          console.log(`Deleted ${deletedCount} keys.`);
 
-      const scanIterator = redisClient.scanIterator(options);
-      let keysToDelete = [];
+          let contentKey = ['top-content/blog','top-content/news'];
+        
+          const deletedContent = await redisClient.del(contentKey);
+          console.log(`Deleted ${deletedContent} keys.`);
+        })();
+        break;
+      case 'video':
 
-      (async () => {
-        for await (const key of scanIterator) {
-          keysToDelete.push(key);
-        }
-      
-        console.log('Keys to delete:', keysToDelete);
-      
-        const deletedCount = await redisClient.del(keysToDelete);
-        console.log(`Deleted ${deletedCount} keys.`);
-      })();
-      
-    }
+        (async () => {
+          let keysToDelete = 'top-content/video';
+        
+          const deletedCount = await redisClient.del(keysToDelete);
+          console.log(`Deleted ${deletedCount} keys.`);
+        })();
 
-    if (isVideoModel) {
-      console.log("isVideoModel",isVideoModel)
+        break;
+      case 'testimonial':
+        (async () => {
+          let keysToDelete = 'top-content/testimonial';
+        
+          const deletedCount = await redisClient.del(keysToDelete);
+          console.log(`Deleted ${deletedCount} keys.`);
+        })();
 
-      (async () => {
-        let keysToDelete = 'top-content/video';
-      
-        const deletedCount = await redisClient.del(keysToDelete);
-        console.log(`Deleted ${deletedCount} keys.`);
-      })();
+        break;
+      default:
+        break;
     }
     
 

@@ -26,6 +26,14 @@ exports.addTestimonials = catchAsync(async (req, res, next) => {
     return next("Unable to save to top model", 500);
   }
 
+  // delete from redis
+  (async () => {
+    let keysToDelete = 'top-content/testimonial';
+      
+    const deletedCount = await redisClient.del(keysToDelete);
+    console.log(`Deleted ${deletedCount} keys.`);
+  })();
+
   return res.status(200).json({
     status: true,
     message: "Testimonial added",
@@ -47,8 +55,18 @@ exports.updateTestimonials = catchAsync(async (req, res, next) => {
     { new: true }
   );
 
-  if (!updateTestimonial)
+  if (!updateTestimonial){
     return next(new AppError("Something went wrong", 500));
+  }
+
+  // delete from redis
+  (async () => {
+    let keysToDelete = 'top-content/testimonial';
+        
+    const deletedCount = await redisClient.del(keysToDelete);
+    console.log(`Deleted ${deletedCount} keys.`);
+  })();
+
   return res.status(200).json({
     status: true,
     message: "Testimonial updated",
@@ -94,6 +112,14 @@ exports.deleteTestimonials = catchAsync(async (req, res, next) => {
   const deleteFromTopModel = await topContentModel.deleteOne({
     contentId: _id,
   });
+
+  // delete from redis
+  (async () => {
+      let keysToDelete = 'top-content/testimonial';
+          
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+  })();
 
   return res.status(200).json({
     status: true,
@@ -160,4 +186,4 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
 });
 
 // disable testimonials
-exports.disableTestimonials = disableOnEnableFunction(testimonialModel);
+exports.disableTestimonials = disableOnEnableFunction(testimonialModel,"testimonial");

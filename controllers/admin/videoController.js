@@ -165,7 +165,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
   });
 
 
-exports.changeVideoStatus = disableOnEnableFunction(videoModel,false,true);
+exports.changeVideoStatus = disableOnEnableFunction(videoModel,"video");
   
 //delete video
 exports.deleteVideo = catchAsync(async (req, res, next) => {
