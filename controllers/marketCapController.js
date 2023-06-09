@@ -294,14 +294,44 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 
 exports.graphOhlc = catchAsync(async (req, res, next) => {
     let {id,days,currency} = req.query
+    let interval
+    // 1/7/14/30/90/180/365/max
+    if(days != "1"){
+      interval = "daily"
+    }
   
     let ohlc = await axios.get(
       `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
     )
+
+    const cryptoData = ohlc.data;
+
+    // Find the highest high and lowest low
+    let highestHigh = -Infinity;
+    let lowestLow = Infinity;
+  
+    for (const data of cryptoData) {
+      const [time, open, highValue, lowValue, close] = data;
+  
+      highestHigh = Math.max(highestHigh, highValue);
+      lowestLow = Math.min(lowestLow, lowValue);
+    }
+
+    const firstData = cryptoData[0];
+    const lastData = cryptoData[cryptoData.length - 1];
+  
+    const [firstTime, firstOpen, , , firstClose] = firstData;
+    const [lastTime, , , , lastClose] = lastData;
+  
+    const change = ((lastClose - firstOpen) / firstOpen) * 100;
+
   
     return res.status(200).json({
       status: true, 
-      cryptoData:  ohlc.data
+      high: highestHigh,
+      low: lowestLow,
+      change: change,
+      cryptoData:  cryptoData,
     });
   })
   
