@@ -205,6 +205,13 @@ exports.deleteVideo = catchAsync(async (req, res, next) => {
     const deleteFromTopModel = await topContentModel.deleteOne({
       contentId: _id,
     });
+
+    (async () => {
+      let keysToDelete = 'top-content/video';
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    })();
   
     return res.status(200).json({
       status: true,
