@@ -9,3 +9,7 @@ top nwe can add duplicate
 -video status
 -priority no limit
 
+
+
+mark incative blog still in top blog card
+testistioal 

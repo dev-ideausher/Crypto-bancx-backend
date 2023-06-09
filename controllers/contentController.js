@@ -27,6 +27,7 @@ exports.addContent = catchAsync(async (req, res, next) => {
       thumbnail,
       featureStatus:"request",
       isActive:false,
+      isApproved:false,
     });
   }else{
     newContent = await contentModel.create({
@@ -38,6 +39,8 @@ exports.addContent = catchAsync(async (req, res, next) => {
       tags,
       thumbnail,
       isDraft:isDraft,
+      isApproved:true,
+      isActive:true,
     });
   }
 
@@ -344,7 +347,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     });
   }
   const content = await contentModel
-    .find({ type : type , isActive:{$ne:false} ,isDeleted:{$ne:true}})
+    .find({ type : type , isActive:true , isApproved:true ,isDeleted:{$ne:true}})
     .sort({ createdAt: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize)
