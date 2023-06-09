@@ -425,6 +425,14 @@ const changeOrder = () => {
       return next(new AppError("something went wrong", 500));
     }
 
+    //redis data delete
+    (async () => {
+      let keysToDelete = `top-content/${type}`;
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    })();
+
     return res
       .status(200)
       .json({ status: true, message: "Priority has been updated" });
