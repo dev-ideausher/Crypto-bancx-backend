@@ -560,7 +560,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
   };
 
   if (type === "testimonial") {
-    filter = { path: "contentId", match: { "isActive": true } };
+    filter = { path: "contentId" };
   }
 
   const topContent = await topContentModel
@@ -568,6 +568,10 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     .populate(filter)
     .limit(5)
     .sort({ priority: -1 });
+  
+  if (type === "testimonial") {
+    topContent = topContent.filter((content) => content.contentId.isActive);
+  }
 
   await redisClient.SETEX(
     `top-content/${type}`,
