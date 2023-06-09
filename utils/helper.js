@@ -74,7 +74,7 @@ const disableOnEnableFunction = (model, modelType) => {
       const data = await model.findByIdAndUpdate(_id,{isActive:true},{new:true})
       done = "enabled"
     }
-
+    console.log("modelType",modelType)
     switch (modelType) {
       case 'content':
         if(done == 'disabled'){
@@ -102,7 +102,7 @@ const disableOnEnableFunction = (model, modelType) => {
           COUNT: 100
         };
   
-        const scanIterator = redisClient.scanIterator(options);
+        const scanIterator = await redisClient.scanIterator(options);
         let keysToDelete = [];
   
         (async () => {
@@ -111,15 +111,40 @@ const disableOnEnableFunction = (model, modelType) => {
           }
         
           console.log('Keys to delete:', keysToDelete);
-        
-          const deletedCount = await redisClient.del(keysToDelete);
-          console.log(`Deleted ${deletedCount} keys.`);
+
+          if(keysToDelete.length){
+            const deletedCount = await redisClient.del(keysToDelete);
+            console.log(`Deleted ${deletedCount} keys.`);
+          }
 
           let contentKey = ['top-content/blog','top-content/news'];
         
           const deletedContent = await redisClient.del(contentKey);
-          console.log(`Deleted ${deletedContent} keys.`);
+          console.log(`Deleted cont ${deletedContent} keys.`);
         })();
+
+        // const options = {
+        //   TYPE: 'string',
+        //   MATCH: 'latest?*',
+        //   COUNT: 100
+        // };
+    
+        // const scanIterator = redisClient.scanIterator(options);
+        // const keysToDelete = [];
+    
+        // for await (const key of scanIterator) {
+        //   keysToDelete.push(key);
+        // }
+    
+        // console.log('Keys to delete:', keysToDelete);
+    
+        // const [deletedCount, deletedContent] = await Promise.all([
+        //   redisClient.del(keysToDelete),
+        //   redisClient.del('top-content/blog', 'top-content/news')
+        // ]);
+    
+        // console.log(`Deleted ${deletedCount} keys.`);
+        // console.log(`Deleted ${deletedContent} keys.`);
         break;
       case 'video':
         if(done == 'disabled'){
