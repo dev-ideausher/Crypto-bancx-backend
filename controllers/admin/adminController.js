@@ -625,7 +625,7 @@ exports.searchBlogs = catchAsync(async (req, res, next) => {
     }
     return res.status(200).json({ status: true, blog: blog });
   }
-  const filter = { $and: [{ type: "blog" }] };
+  const filter = { $and: [{ type: "blog" },{ isApproved: true }] };
   if (status !== "all") {
     filter["$and"].push({ isActive: status === "true" ? true : false });
   }
