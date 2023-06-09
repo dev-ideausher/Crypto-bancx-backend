@@ -46,6 +46,7 @@ const requiresAuth = async (req, res, next) => {
       return next(new AppError("User not found", 404));
     }
   }
+  user.userType = "user";
   req.user = user;
   next();
 };

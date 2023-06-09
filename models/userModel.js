@@ -21,10 +21,9 @@ const userSchema = new mongoose.Schema(
     },
     // userType: {
     //   type: String,
-    //   enum: ["user", "owner", "admin"],
+    //   enum: ["user"],
     //   default: "user",
     // },
-
     firebaseUid: {
       type: String,
       required: true,

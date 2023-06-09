@@ -16,7 +16,7 @@ exports.addContent = catchAsync(async (req, res, next) => {
   const { title, description, thumbnail, content, type, tags } = req.body;
 
   let newContent
-  if(req.userType == "user"){
+  if(req.user.userType == "user"){
     newContent = await contentModel.create({
       title,
       description,
@@ -57,9 +57,10 @@ exports.addContent = catchAsync(async (req, res, next) => {
     }
   
     console.log('Keys to delete:', keysToDelete);
-  
-    const deletedCount = await redisClient.del(keysToDelete);
-    console.log(`Deleted ${deletedCount} keys.`);
+    if(keysToDelete.length){
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    }
 
     let contentKey = `top-content/${type}`;
   
