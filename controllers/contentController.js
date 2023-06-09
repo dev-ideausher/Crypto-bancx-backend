@@ -13,7 +13,7 @@ const videoModel = require("../models/videoModel");
 const EXPIRY_TIME = 3600;
 // add content
 exports.addContent = catchAsync(async (req, res, next) => {
-  const { title, description, thumbnail, content, type, tags } = req.body;
+  const { title, description, thumbnail, content, type, tags ,isDraft } = req.body;
 
   let newContent
   if(req.user.userType == "user"){
@@ -25,7 +25,8 @@ exports.addContent = catchAsync(async (req, res, next) => {
       type,
       tags,
       thumbnail,
-      featureStatus:"request"
+      featureStatus:"request",
+      isActive:false,
     });
   }else{
     newContent = await contentModel.create({
@@ -36,6 +37,7 @@ exports.addContent = catchAsync(async (req, res, next) => {
       type,
       tags,
       thumbnail,
+      isDraft:isDraft,
     });
   }
 

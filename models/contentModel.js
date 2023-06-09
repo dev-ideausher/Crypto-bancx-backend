@@ -59,6 +59,10 @@ const schema = new mongoose.Schema(
     isApproved: {
       type: Boolean,
     },
+    isDraft:{
+      type: Boolean,
+      default:false,
+    },
     isActive: {
       type: Boolean,
       default: true,
