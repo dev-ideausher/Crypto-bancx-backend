@@ -12,6 +12,7 @@ top nwe can add duplicate
 
 
 ==mark incative blog still in top blog card
-testistioal 
+==testistioal 
 
 fixed feature request issue
+video issue fixed

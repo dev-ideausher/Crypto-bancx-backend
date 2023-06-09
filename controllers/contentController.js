@@ -569,7 +569,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     .limit(5)
     .sort({ priority: -1 });
   
-  if (type === "testimonial") {
+  if (type === "testimonial" || type === "video" ) {
     topContent = topContent.filter((content) => content.contentId.isActive);
   }
 
