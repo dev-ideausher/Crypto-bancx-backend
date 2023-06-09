@@ -109,6 +109,9 @@ exports.validateToken = (model) => {
       return next(new AppError("Invalid token", 401));
     }
 
+    //last active update
+    user.lastActive = new Date();
+    await user.save();
     req.user = user;
     next();
   } catch (err) {

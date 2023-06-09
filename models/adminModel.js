@@ -23,6 +23,9 @@ const schema = new mongoose.Schema({
     enum: ["admin", "subAdmin"],
     default: "subAdmin",
   },
+  lastActive:{
+    type:Date,
+  },
   isActive: {
     type: Boolean,
     default: true,
