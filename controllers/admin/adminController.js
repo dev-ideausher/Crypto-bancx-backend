@@ -853,6 +853,7 @@ exports.approveOrRejectFeature = catchAsync(async (req, res, next) => {
   let featureRequests = await contentModel.findByIdAndUpdate(featureId,{
     featureStatus: featureStatus,
     isApproved: status,
+    isActive: status,
   },{new:true})
 
   return res.status(200).json({ status: true, message:"updated", featureRequests: featureRequests });
