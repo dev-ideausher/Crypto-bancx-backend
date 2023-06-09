@@ -123,47 +123,25 @@ const disableOnEnableFunction = (model, modelType) => {
           console.log(`Deleted cont ${deletedContent} keys.`);
         })();
 
-        // const options = {
-        //   TYPE: 'string',
-        //   MATCH: 'latest?*',
-        //   COUNT: 100
-        // };
-    
-        // const scanIterator = redisClient.scanIterator(options);
-        // const keysToDelete = [];
-    
-        // for await (const key of scanIterator) {
-        //   keysToDelete.push(key);
-        // }
-    
-        // console.log('Keys to delete:', keysToDelete);
-    
-        // const [deletedCount, deletedContent] = await Promise.all([
-        //   redisClient.del(keysToDelete),
-        //   redisClient.del('top-content/blog', 'top-content/news')
-        // ]);
-    
-        // console.log(`Deleted ${deletedCount} keys.`);
-        // console.log(`Deleted ${deletedContent} keys.`);
         break;
       case 'video':
-        if(done == 'disabled'){
-          let topContent = await topContentModel.findOne({contentId:_id})
-          if(topContent){
-            req.query._id = topContent._id;
-            req.query.type = 'video'
-            await new Promise((resolve, reject) => {
-              permanentDeleteTopContent(topContentModel)(req, res, (error) => {
-                if (error) {
-                  console.log(error);
-                  reject(error);
-                } else {
-                  resolve();
-                }
-              });
-            });
-          }
-        }
+        // if(done == 'disabled'){
+        //   let topContent = await topContentModel.findOne({contentId:_id})
+        //   if(topContent){
+        //     req.query._id = topContent._id;
+        //     req.query.type = 'video'
+        //     await new Promise((resolve, reject) => {
+        //       permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+        //         if (error) {
+        //           console.log(error);
+        //           reject(error);
+        //         } else {
+        //           resolve();
+        //         }
+        //       });
+        //     });
+        //   }
+        // }
 
         (async () => {
           let keysToDelete = 'top-content/video';
@@ -174,23 +152,23 @@ const disableOnEnableFunction = (model, modelType) => {
 
         break;
       case 'testimonial':
-        if(done == 'disabled'){
-          let topContent = await topContentModel.findOne({contentId:_id})
-          if(topContent){
-            req.query._id = topContent._id;
-            req.query.type = 'testimonial'
-            await new Promise((resolve, reject) => {
-              permanentDeleteTopContent(topContentModel)(req, res, (error) => {
-                if (error) {
-                  console.log(error);
-                  reject(error);
-                } else {
-                  resolve();
-                }
-              });
-            });
-          }
-        }
+        // if(done == 'disabled'){
+        //   let topContent = await topContentModel.findOne({contentId:_id})
+        //   if(topContent){
+        //     req.query._id = topContent._id;
+        //     req.query.type = 'testimonial'
+        //     await new Promise((resolve, reject) => {
+        //       permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+        //         if (error) {
+        //           console.log(error);
+        //           reject(error);
+        //         } else {
+        //           resolve();
+        //         }
+        //       });
+        //     });
+        //   }
+        // }
         (async () => {
           let keysToDelete = 'top-content/testimonial';
         

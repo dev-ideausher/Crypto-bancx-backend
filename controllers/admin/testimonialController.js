@@ -164,18 +164,32 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
 
   let filteredTestimonials
 
-  if (status && status !== "all") {
-    if(status == "true"){
-      filter.isActive = true
-    }else if(status == "false"){
-      filter.isActive = false
-    }
+  if(status == "all"){
+    console.log("status",status);
+    filteredTestimonials = testimonials
+  }else if(status == "true"){
+    filter.isActive = true
     filteredTestimonials = testimonials.filter(testimonial=>{
       return(testimonial.contentId.isActive ==filter.isActive)
     })
-  }else if(status == "all"){
-    filteredTestimonials = testimonials
+  }else if(status == "false"){
+    filter.isActive = false
+    filteredTestimonials = testimonials.filter(testimonial=>{
+      return(testimonial.contentId.isActive ==filter.isActive)
+    })
   }
+  // if (status !== "all") {
+  //   if(status == "true"){
+  //     filter.isActive = true
+  //   }else if(status == "false"){
+  //     filter.isActive = false
+  //   }
+  //   filteredTestimonials = testimonials.filter(testimonial=>{
+  //     return(testimonial.contentId.isActive ==filter.isActive)
+  //   })
+  // }else if(status == "all"){
+  //   filteredTestimonials = testimonials
+  // }
 
 
   return res.status(200).json({
