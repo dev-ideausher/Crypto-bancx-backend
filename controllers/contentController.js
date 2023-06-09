@@ -563,7 +563,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     filter = { path: "contentId" };
   }
 
-  const topContent = await topContentModel
+  let topContent = await topContentModel
     .find({ type })
     .populate(filter)
     .limit(5)
