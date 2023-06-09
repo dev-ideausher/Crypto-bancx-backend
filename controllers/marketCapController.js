@@ -138,7 +138,7 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
   });
 })
 
-//single coin auth
+//single coin auth and no auth
 exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
   let id = req.params.id
 
@@ -161,10 +161,13 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
       homepageUrl:response.data.links.homepage,
     },{new:true})
   }
-
-  const watchListedId = await watchListModel.findOne({id:id, userId: req.user._id }).distinct('id');
-  if (watchListedId){
-    marketCap.isWishListed=true;
+  if (req.user){
+    if(req.user.userType == "user"){
+      const watchListedId = await watchListModel.findOne({id:id, userId: req.user._id })
+      if (watchListedId){
+        marketCap.isWishListed=true;
+      }
+    } 
   }
 
     // //similiar coins
@@ -209,69 +212,6 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
   });
 })
 
-//single coin no auth
-exports.singleCryptoMarketNoAuth = catchAsync(async (req, res, next) => {
-  let id = req.params.id
-
-  let marketCap = await marketCapModel.findOne({marketCapId:id});
-  if (!marketCap.description){
-    const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/${id}`, {
-      params: {
-        localization: false,
-        tickers: false,
-        market_data: false,
-        developer_data: false,
-        sparkline: false,
-      },
-    });
-    const descriptionString = response.data.description.en.replace(/<[^>]+>/g, '');
-    console.log(descriptionString);
-    marketCap.description=descriptionString;
-    marketCap.homepageUrl=response.data.links.homepage;
-    await marketCap.save();
-  }
-
-  // //similiar coins
-  let order = [];
-let originOrder = marketCap.order;
-let limit
-if (originOrder === 2) {
-  limit = 3;
-} else if (originOrder === 1) {
-  limit = 4;
-} else {
-  limit = 2;
-}
-// console.log("limit",limit)
-
-
-for (let i = 0; i < limit; i++) {
-  originOrder = originOrder + 1;
-  // console.log("i",i,"origin",originOrder);
-  order.push(originOrder);
-}
-
-originOrder = marketCap.order;
-
-for (let i = 0; i < limit; i++) {
-  // console.log("origin",originOrder);
-  originOrder = originOrder - 1;
-  // console.log("origin",originOrder);
-  if (originOrder > 0) {
-    // console.log("i",i,"origin",originOrder);
-    order.push(originOrder);
-  }
-}
-
-  console.log(order)
-  let similarCoins = await marketCapModel.find({order:{$in:order}}).limit(4)
-
-  return res.status(200).json({
-    status: true, 
-    marketCap: marketCap,
-    similarCoins: similarCoins,
-  });
-})
 
 
 exports.searchListSuggestion = catchAsync(async (req, res, next) => {

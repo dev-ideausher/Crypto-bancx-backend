@@ -43,7 +43,7 @@ router.get("/logout", requiresAuth, userController.logout);
 router.get("/get-crypto-market", requiresAuth,marketCapController.cryptoMarketsApi);
 router.get("/no-auth/get-crypto-market", marketCapController.cryptoMarketsNoAuth);
 router.get("/get-crypto-market/:id", requiresAuth,marketCapController.singleCryptoMarket);
-router.get("/no-auth/get-crypto-market/:id", marketCapController.singleCryptoMarketNoAuth);
+router.get("/no-auth/get-crypto-market/:id", marketCapController.singleCryptoMarket);
 // router.get("/graph", userController.graph);
 router.get("/graph-ohlc", marketCapController.graphOhlc);
 router.get("/graph-chart", marketCapController.graphMarketChart);
