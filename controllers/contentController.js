@@ -560,7 +560,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
   };
 
   if (type === "testimonial") {
-    filter = { path: "contentId" };
+    filter = { path: "contentId", match: { "isActive": true } };
   }
 
   const topContent = await topContentModel
