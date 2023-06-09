@@ -499,7 +499,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
       return res.status(200).json({
         status: true,
         message: "Data found from redis",
-        content: content,
+        data: content,
         recommended:recommended,
       });
     }
@@ -538,7 +538,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
       {new: true}
     );
 
-    return res.status(200).json({ status: true, message: "", data: content , recommended: recommended });
+    return res.status(200).json({ status: true, message: "Data found", data: content , recommended: recommended });
   }
   const resultExists = await redisClient.get(`top-content/${type}`);
 
