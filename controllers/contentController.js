@@ -546,7 +546,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     //await redisClient.quit();
     return res.status(200).json({
       status: true,
-      message: "Result found",
+      message: "Result found on redis",
       result: JSON.parse(resultExists),
     });
   }
@@ -579,7 +579,7 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     JSON.stringify(topContent)
   );
 
-  return res.status(200).json({ status: true, message: "", data: topContent });
+  return res.status(200).json({ status: true, message: "Result found", result: topContent });
 });
 
 
