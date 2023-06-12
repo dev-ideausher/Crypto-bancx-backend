@@ -170,12 +170,12 @@ exports.deleteAdmin = catchAsync(async (req, res, next) => {
   if (!findAdmin) {
     return next(new AppError("Invalid Admin", 500));
   }
-  if(findAdmin.role =="admin"){
+  if(findAdmin.role =="superAdmin"){
     return next(new AppError("Error: you are not authorised to delete a super admin", 403));
   }
   const softDeleteAdmin = await adminModel.findOneAndUpdate(
     { _id: adminId },
-    { $set: { isDeleted: true } }
+    { $set: { isDeleted: true, email: findAdmin.email + "12345" } }
   );
   if (!softDeleteAdmin) return next(new AppError("Server Error.", 500));
 

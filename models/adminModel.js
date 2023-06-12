@@ -20,8 +20,8 @@ const schema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["admin", "subAdmin"],
-    default: "subAdmin",
+    enum: ["superAdmin", "admin"],
+    default: "admin",
   },
   lastActive:{
     type:Date,
