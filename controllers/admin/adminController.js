@@ -190,7 +190,7 @@ exports.getAllAdmins = catchAsync(async (req, res, next) => {
   if (adminId) {
     const admin = await adminModel.findOne({
       _id: adminId,
-      role: { $ne: "admin" },
+      // role: { $ne: "admin" },
     });
     if (!admin) return next(new AppError("Invalid admin", 500));
     return res.status(200).json({ status: true, admin: admin });
