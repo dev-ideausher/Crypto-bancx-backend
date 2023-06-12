@@ -538,6 +538,13 @@ const permanentDeleteTopContent = (model) => {
       }),
     ]);
 
+    (async () => {
+      let keysToDelete = `top-content/${type}`;
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+    })();
+
       return res
       .status(200)
       .json({ status: true, message: "Successfully Delete. ", data: data });
