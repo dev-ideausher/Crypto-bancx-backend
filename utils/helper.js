@@ -61,40 +61,35 @@ const disableOnEnableFunction = (model, modelType) => {
   return catchAsync(async (req, res, next) => {
     const { _id } = req.body;
 
-    const data = await model.findById(_id)
+    let data = await model.findById(_id)
     if (!data) {
       return next(new AppError("Something went wrong.", 500));
     }
 
     let done 
     if(data.isActive==true){
-      const data = await model.findByIdAndUpdate(_id,{isActive:false},{new:true})
+      data = await model.findByIdAndUpdate(_id,{isActive:false},{new:true})
       done = "disabled"
     }else{
-      const data = await model.findByIdAndUpdate(_id,{isActive:true},{new:true})
+      data = await model.findByIdAndUpdate(_id,{isActive:true},{new:true})
       done = "enabled"
     }
     console.log("modelType",modelType)
     switch (modelType) {
       case 'content':
-        if(done == 'disabled'){
+        if(done == "disabled"){
+          console.log("in done == disbled")
           let topContent = await topContentModel.findOne({contentId:_id})
           if(topContent){
-            req.query._id = topContent._id;
-            req.query.type = data.type
-            await new Promise((resolve, reject) => {
-              permanentDeleteTopContent(topContentModel)(req, res, (error) => {
-                if (error) {
-                  console.log(error);
-                  reject(error);
-                } else {
-                  resolve();
-                }
-              });
-            });
+            console.log("topContent",topContent)
+            // req.query._id = topContent._id;
+            // req.query.type = data.type
+            let permDel = await permanentDelTopContentFunc(topContent._id,data.type)
+            if(!permDel.status){
+              return next(new AppError("Something went wrong.", 500));
+            }
           }
         }
-
 
         const options = {
           TYPE: 'string', // `SCAN` only
@@ -125,7 +120,7 @@ const disableOnEnableFunction = (model, modelType) => {
 
         break;
       case 'video':
-        // if(done == 'disabled'){
+        // if(done == "disabled"){
         //   let topContent = await topContentModel.findOne({contentId:_id})
         //   if(topContent){
         //     req.query._id = topContent._id;
@@ -152,7 +147,7 @@ const disableOnEnableFunction = (model, modelType) => {
 
         break;
       case 'testimonial':
-        // if(done == 'disabled'){
+        // if(done == "disabled"){
         //   let topContent = await topContentModel.findOne({contentId:_id})
         //   if(topContent){
         //     req.query._id = topContent._id;
@@ -474,6 +469,46 @@ const setTop = () => {
   });
 };
 
+const permanentDelTopContentFunc = async (_id,type) => {
+  try{
+  console.log("top req query _id",_id)
+  console.log("top req query type",type)
+  const current = await topContentModel.findById(_id);
+  if (!current) {
+    return next(new AppError("Invalid data", 500));
+  }
+  // const isDeleted = await topContentModel.deleteOne({ _id: current._id });
+  // if (!isDeleted.acknowledged || isDeleted.deletedCount !== 1) {
+  //   return next(new AppError("Unable to Delete", 500));
+  // }
+  const otherDocs = await topContentModel.find({
+    priority: { $gt: current.priority },
+    type,
+  });
+  const data = await Promise.all([
+    topContentModel.deleteOne({ _id: current._id }),
+    ...otherDocs.map((doc) => {
+      return topContentModel.findOneAndUpdate(
+        { _id: doc._id },
+        { $set: { priority: doc.priority - 1 } },
+        { new: true }
+      );
+    }),
+  ]);
+
+  return { 
+    status: true,
+    message: "Successfully Delete. ",
+    data: data 
+  };
+} catch(err){
+  return {
+    status:false,
+    msg:err.message
+  };
+}
+}
+
 // delete
 const permanentDeleteTopContent = (model) => {
   return catchAsync(async (req, res, next) => {
@@ -503,9 +538,10 @@ const permanentDeleteTopContent = (model) => {
       }),
     ]);
 
-    return res
+      return res
       .status(200)
       .json({ status: true, message: "Successfully Delete. ", data: data });
+  
   });
 };
 
@@ -626,6 +662,7 @@ module.exports = {
   generateDate,
   changeOrder,
   setTop,
+  permanentDelTopContentFunc,
   permanentDeleteTopContent,
   addToTopContent,
   decreaseContentOrder,
