@@ -137,7 +137,7 @@ exports.addAdmin = catchAsync(async (req, res, next) => {
     return next(
       new AppError("You don't have the permission to do this activity.", 403)
     );
-  const { email, password, name } = req.body;
+  const { email, password, name, role } = req.body;
   if (!email || !password || !name)
     return next(
       new AppError("Provide all necessary details to add the admin", 402)
@@ -151,6 +151,7 @@ exports.addAdmin = catchAsync(async (req, res, next) => {
     email: email,
     password: hashedPassword,
     name,
+    role,
   });
 
   return res.status(200).json({
