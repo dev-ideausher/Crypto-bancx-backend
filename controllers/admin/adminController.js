@@ -39,7 +39,7 @@ exports.register = catchAsync(async (req, res, next) => {
     name: name,
     email: email,
     password: hashedPassword,
-    role: "admin",
+    role: "superAdmin",
   });
   console.log("admin created = ", admin);
   return res.status(200).json({
