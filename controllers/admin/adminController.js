@@ -13,6 +13,7 @@ const {
   generateDate,
   changeOrder,
   setTop,
+  permanentDelTopContentFunc,
   permanentDeleteTopContent,
   addToTopContent,
   decreaseContentOrder,
@@ -438,18 +439,22 @@ exports.deleteBlogs = catchAsync(async (req, res, next) => {
 
   let topContent = await topContentModel.findOne({contentId:_id})
   if(topContent){
-    req.query._id = topContent._id;
-    req.query.type = "blog"
-    await new Promise((resolve, reject) => {
-      permanentDeleteTopContent(topContentModel)(req, res, (error) => {
-        if (error) {
-          console.log(error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
+    // req.query._id = topContent._id;
+    // req.query.type = "blog"
+    // await new Promise((resolve, reject) => {
+    //   permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+    //     if (error) {
+    //       console.log(error);
+    //       reject(error);
+    //     } else {
+    //       resolve();
+    //     }
+    //   });
+    // });
+    let permDel = await permanentDelTopContentFunc(topContent._id,"blog")
+    if(!permDel.status){
+      return next(new AppError("Something went wrong.", 500));
+    }
   }
 
   const options = {
@@ -496,18 +501,22 @@ exports.deleteNews = catchAsync(async (req, res, next) => {
 
   let topContent = await topContentModel.findOne({contentId:_id})
   if(topContent){
-    req.query._id = topContent._id;
-    req.query.type = "news";
-    await new Promise((resolve, reject) => {
-      permanentDeleteTopContent(topContentModel)(req, res, (error) => {
-        if (error) {
-          console.log(error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
+    // req.query._id = topContent._id;
+    // req.query.type = "news";
+    // await new Promise((resolve, reject) => {
+    //   permanentDeleteTopContent(topContentModel)(req, res, (error) => {
+    //     if (error) {
+    //       console.log(error);
+    //       reject(error);
+    //     } else {
+    //       resolve();
+    //     }
+    //   });
+    // });
+    let permDel = await permanentDelTopContentFunc(topContent._id,"news")
+    if(!permDel.status){
+      return next(new AppError("Something went wrong.", 500));
+    }
   }
 
   const options = {

@@ -35,6 +35,12 @@ router.patch(
   contentController.updateContent
 );
 
+router.patch(
+  "/publish-draft",
+  authController.validateToken(adminModel),
+  contentController.publishDraft
+);
+
 router.delete(
   "/delete",
   authController.validateToken(adminModel),

@@ -576,6 +576,8 @@ const addToTopContent = (model) => {
       return next(new AppError('Error: Invalid content Id.', 400));
     }else if(content.isActive != true){
       return next(new AppError(`Error: Can't make inActive ${type} as top post`, 400));
+    }else if(content.isDraft == true){
+      return next(new AppError(`Error: Can't make isDraft ${type} as top post`, 400));
     }else{
       let topContent = await model.findOne({contentId:contentId})
       if(topContent){

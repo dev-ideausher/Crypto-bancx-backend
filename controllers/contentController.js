@@ -148,6 +148,58 @@ exports.updateContent = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.publishDraft = catchAsync(async (req, res, next) => {
+  const {_id} = req.query;
+  if (!["admin", "subAdmin"].includes(req.user.role)) {
+    return next(
+      new AppError("You don't have the permission to perform this action", 500)
+    );
+  }
+  const content = await contentModel.findById(_id);
+  if (!content) return next(new AppError("Invalid content", 403));
+
+  if(content.isDraft == false){
+    return next(
+      new AppError("already published.", 403)
+    );
+  }
+  content.isDraft = false;
+  await content.save();
+
+
+    const options = {
+      TYPE: 'string', // `SCAN` only
+      MATCH: `latest?type=${content.type}*`,
+      COUNT: 100
+    };
+  
+    const scanIterator = redisClient.scanIterator(options);
+    let keysToDelete = [];
+  
+    (async () => {
+      for await (const key of scanIterator) {
+        keysToDelete.push(key);
+      }
+    
+      console.log('Keys to delete:', keysToDelete);
+    
+      const deletedCount = await redisClient.del(keysToDelete);
+      console.log(`Deleted ${deletedCount} keys.`);
+  
+      let contentKey = `top-content/${content.type}`;
+    
+      const deletedContent = await redisClient.del(contentKey);
+      console.log(`Deleted ${deletedContent} keys.`);
+    })();
+  
+  return res.status(200).json({
+    status: true,
+    content: content,
+    message: "content has been updated",
+  });
+
+})
+
 // delete content
 exports.deleteContent = catchAsync(async (req, res, next) => {
   const { contentId } = req.query;
@@ -301,9 +353,9 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     let tagIds = content.tags.map((tag) => tag.id)
     let recommended
     if(content.type=="blog"){
-      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({viewCount:-1}).limit(5);
+      recommended = await contentModel.find({type:content.type, tags:{$in:tagIds}, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({viewCount:-1}).limit(5);
     }else if (content.type=="news"){
-      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({createdAt:-1}).limit(5);
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({createdAt:-1}).limit(5);
     }
 
     await redisClient.SETEX(
@@ -347,14 +399,14 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     });
   }
   const content = await contentModel
-    .find({ type : type , isActive:true , isApproved:true ,isDeleted:{$ne:true}})
+    .find({ type : type , isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}})
     .sort({ createdAt: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize)
     .populate("tags")
     .populate("author");
 
-  const total = (await contentModel.find()).length;
+  const total = (await contentModel.find({ type : type , isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}})).length;
 
   await redisClient.SETEX(
     `latest?type=${type}&page=${page}&pageSize=${pageSize}`,
@@ -417,7 +469,7 @@ exports.search = catchAsync(async (req, res, next) => {
     // Store all the _id values in an array
     const idArray = doc.map((result) => result._id);
 
-    let searchResult = await contentModel.find({_id:{$in:idArray}})
+    let searchResult = await contentModel.find({_id:{$in:idArray},isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}})
     .populate("tags", "name")
     .populate("author", "name email image")
 
@@ -515,9 +567,9 @@ exports.getTopContent = catchAsync(async (req, res, next) => {
     let tagIds = content.tags.map((tag) => tag.id)
     let recommended
     if(content.type=="blog"){
-      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({viewCount:-1}).limit(5);
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({viewCount:-1}).limit(5);
     }else if (content.type=="news"){
-      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}}).sort({createdAt:-1}).limit(5);
+      recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({createdAt:-1}).limit(5);
     }
 
     await redisClient.SETEX(
@@ -606,7 +658,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
 //get recomended news
 exports.recommendedMarketNews = catchAsync(async (req,res,next) =>{
 
-  let recommended = await contentModel.find({type:"news"}).populate("author", "name email image").sort({viewCount:-1}).limit(5);
+  let recommended = await contentModel.find({type:"news", isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).populate("author", "name email image").sort({viewCount:-1}).limit(5);
 
   return res.status(200).json({ status: true, message: "", data: recommended });
 })
@@ -624,7 +676,7 @@ exports.relatedNews = catchAsync(async (req, res, next) => {
   };
 
   let recommended = await contentModel
-    .find({ type: "news", ...regexQuery})
+    .find({ type: "news", isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}, ...regexQuery})
     .populate("author", "name email image")
     .sort({ viewCount: -1 })
     .limit(5);
