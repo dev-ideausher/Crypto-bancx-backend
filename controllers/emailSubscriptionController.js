@@ -1,7 +1,7 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const EmailSubscriptionModel = require("../models/emailSubscriptionModel");
-const Email = require("../../utils/email");
+const Email = require("../utils/email");
 
 exports.addEmailSubscription = catchAsync(async (req, res, next) => {
     const {email}= req.body
