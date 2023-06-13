@@ -18,6 +18,7 @@ const {
   permanentDeleteTopContent,
   addToTopContent,
   decreaseContentOrder,
+  generateRandomString,
 } = require("../../utils/helper");
 const Email = require("../../utils/email")
 const aboutUsModel = require("../../models/aboutUs");
@@ -176,9 +177,10 @@ exports.deleteAdmin = catchAsync(async (req, res, next) => {
   if(findAdmin.role =="superAdmin"){
     return next(new AppError("Error: you are not authorised to delete a super admin", 403));
   }
+  const randomString = generateRandomString(8);
   const softDeleteAdmin = await adminModel.findOneAndUpdate(
     { _id: adminId },
-    { $set: { isDeleted: true, email: findAdmin.email + "12345" } }
+    { $set: { isDeleted: true, email: findAdmin.email + randomString } }
   );
   if (!softDeleteAdmin) return next(new AppError("Server Error.", 500));
 
