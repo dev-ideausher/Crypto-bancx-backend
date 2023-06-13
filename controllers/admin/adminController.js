@@ -135,7 +135,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
 // add admin
 exports.addAdmin = catchAsync(async (req, res, next) => {
-  if (req.user.role !== "admin")
+  if (req.user.role !== "superAdmin")
     return next(
       new AppError("You don't have the permission to do this activity.", 403)
     );
@@ -165,7 +165,7 @@ exports.addAdmin = catchAsync(async (req, res, next) => {
 // delete admin
 exports.deleteAdmin = catchAsync(async (req, res, next) => {
   const { adminId } = req.query;
-  if (req.user.role !== "admin")
+  if (req.user.role !== "superAdmin")
     return next(
       new AppError("You don't have the permission to do this activity.", 403)
     );
@@ -243,7 +243,7 @@ exports.editAdmin = catchAsync(async (req, res, next) => {
 
 // change admin status
 exports.changeAdminStatus = catchAsync(async (req, res, next) => {
-  if (req.user.role !== "admin")
+  if (req.user.role !== "superAdmin")
     return next(
       new AppError("You don't have permission to perform this operation.", 403)
     );
