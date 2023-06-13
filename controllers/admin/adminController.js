@@ -221,7 +221,7 @@ exports.getSingleAdmin = catchAsync(async (req, res, next) => {
 
 // edit admin
 exports.editAdmin = catchAsync(async (req, res, next) => {
-  const { name, image, adminId } = req.body;
+  const { name, image, adminId, role } = req.body;
 
   const updatedAdmin = await adminModel.findOneAndUpdate(
     { _id: adminId || req.user._id },
@@ -229,6 +229,7 @@ exports.editAdmin = catchAsync(async (req, res, next) => {
       $set: {
         name: name,
         image: image,
+        role: role,
       },
     },
     { new: true }
