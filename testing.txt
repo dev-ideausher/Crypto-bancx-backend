@@ -17,3 +17,4 @@ top nwe can add duplicate
 fixed feature request issue
 video issue fixed
 delete video issue fixed
+change priority issue fixed

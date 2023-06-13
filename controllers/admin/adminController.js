@@ -1,6 +1,7 @@
 const adminModel = require("../../models/adminModel");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcryptjs");
+const crypto = require('crypto');
 const AppError = require("../../utils/appError");
 const { JWT_EXPIRY_TIME } = require("../../config/config");
 const {
@@ -18,6 +19,7 @@ const {
   addToTopContent,
   decreaseContentOrder,
 } = require("../../utils/helper");
+const Email = require("../../utils/email")
 const aboutUsModel = require("../../models/aboutUs");
 const employeeModel = require("../../models/employeeModel");
 const commentModel = require("../../models/commentModel");
@@ -286,6 +288,105 @@ exports.changePassword = catchAsync(async (req, res, next) => {
 
   return res.status(200).json({ status: true, admin: updatedAdmin });
 });
+
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+      const { email } = req.body;
+      let checkAdmin = await adminModel.findOne({ email: email });
+      console.log(checkAdmin)
+      if (!checkAdmin) {
+          return res.status(404).json({
+              status: false,
+              msg: "No user found with this email."
+          })
+      }
+      const resetToken = checkAdmin.createPasswordResetToken();
+      console.log("resetToken",resetToken)
+      await checkAdmin.save()
+      try {
+          const resetLink = req.protocol + "://" + req.get('host') + '/admin/resetPassword?token=' + resetToken;
+          console.log("reset link",resetLink);
+          await new Email(checkAdmin, { resetLink }).forgotPassword();
+          return res.status(200).json({
+              status: true,
+              msg: `A email verification link sent to ${email}.`
+          });
+
+      } catch (err) {
+        console.log(err)
+          await checkAdmin.save({ validateBeforeSave: false });
+          return res.status(500).json({
+              status: false,
+              msg: "There was an error sending the email. Try again later!"
+          })
+      }
+
+  } catch (err) {
+      console.log(err)
+      return res.status(500).json({
+          status: false,
+          msg: err.message
+      })
+  }
+}
+
+exports.getResetPassword = async(req , res , next) => {
+
+  const {token} = req.query;
+
+  const url = req.protocol + "://" + req.get('host')+'/admin/resetPassword';
+
+  res.render('forgotPassword', {
+    pageTitle: 'Reset Password',
+    url: url,
+    resetToken: token,
+  });
+
+}
+
+// router.get("/resetPassword/",(req , res , next) => {
+
+
+// router.post("/resetPassword/",async(req , res , next) => {
+exports.postResetPassword = async(req , res , next) => {
+try{
+    const {resetToken,new_password,confirm_password} = req.body;
+    // 1) Get user based on the token
+    console.log(resetToken)
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    console.log(hashedToken)
+    const checker = await adminModel.findOne({passwordResetToken:hashedToken,passwordResetExpires:{$gt:Date.now()}});
+    console.log(checker)
+    if(!checker){
+        return res.render('forgotPasswordMsg', {
+            msg:"Token is invalid or has expired"
+        });
+    }
+    if(new_password !== confirm_password){
+        return res.render('forgotPasswordMsg', {
+            msg:"Password does not match."
+        });
+    }
+
+    // 2) if token has not expired, and there is user, set the new password
+    checker.password = await bcrypt.hashSync(req.body.new_password,10);
+    checker.passwordResetToken = undefined;
+    checker.passwordResetExpires = undefined;
+    await checker.save();
+
+    return res.render('forgotPasswordMsg', {
+        msg:"Password updated. Please login to continue"
+    });
+
+}catch(err){
+    console.log(err)
+    return res.render('forgotPasswordMsg', {
+        msg:err.message
+    });
+}
+
+};
 
 // add about us
 exports.addAboutUs = catchAsync(async (req, res, next) => {

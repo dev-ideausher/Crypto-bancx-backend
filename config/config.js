@@ -7,6 +7,10 @@ module.exports = {
   AWS_SECRET_KEY: process.env.AWS_SECRET_KEY,
   API_VERSION: process.env.API_VERSION,
 
+  EMAIL_FROM:process.env.EMAIL_FROM,
+  SENDGRID_USERNAME:process.env.SENDGRID_USERNAME,
+  SENDGRID_PASSWORD:process.env.SENDGRID_PASSWORD,
+
 
   JWT_SECRETE_KEY: process.env.JWT_SECRETE_KEY,
   JWT_EXPIRY_TIME: process.env.JWT_EXPIRY_TIME,

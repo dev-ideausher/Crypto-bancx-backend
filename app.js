@@ -33,6 +33,9 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.set('view engine', 'pug');
+app.set('views', 'views');
+
 // Data sanitization against NoSql query injection
 app.use(mongoSanitize());
 

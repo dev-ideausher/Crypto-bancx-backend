@@ -701,3 +701,13 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 })
 
 
+// const p = async()=>{
+//   let password = await contentModel.updateMany({isDraft:false})
+//   console.log("finish p")
+// }
+
+// (async () => {
+//     console.log("start");
+//     await p()
+//     console.log("finish"); 
+// })();

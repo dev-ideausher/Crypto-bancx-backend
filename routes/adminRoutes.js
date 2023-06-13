@@ -8,6 +8,10 @@ const adminVideoController = require("../controllers/admin/videoController")
 router.post("/create", adminController.register);
 router.post("/login", adminController.login);
 
+router.get("/resetPassword",adminController.getResetPassword);
+router.post("/resetPassword",adminController.postResetPassword);
+router.post("/forgotPassword",adminController.forgotPassword);
+
 router.post(
   "/add",
   authController.validateToken(adminModel),
