@@ -91,7 +91,7 @@ exports.updateContent = catchAsync(async (req, res, next) => {
     tags,
     thumbnail,
   } = req.body;
-  if (!["admin", "subAdmin"].includes(req.user.role)) {
+  if (!["admin", "superAdmin"].includes(req.user.role)) {
     return next(
       new AppError("You don't have the permission to perform this action", 500)
     );
