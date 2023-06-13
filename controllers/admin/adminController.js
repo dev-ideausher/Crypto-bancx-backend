@@ -231,11 +231,23 @@ exports.editAdmin = catchAsync(async (req, res, next) => {
       $set: {
         name: name,
         image: image,
-        role: role,
+        // role: role,
       },
     },
     { new: true }
   );
+
+
+  if (role){
+    if (req.user.role !== "superAdmin"){
+      return next(
+        new AppError("You don't have the permission to do this activity.", 403)
+      );
+    }else{
+      updatedAdmin.role = role;
+      await updatedAdmin.save();
+    }
+  }
 
   return res.status(200).json({
     status: true,
