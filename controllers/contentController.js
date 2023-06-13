@@ -150,7 +150,7 @@ exports.updateContent = catchAsync(async (req, res, next) => {
 
 exports.publishDraft = catchAsync(async (req, res, next) => {
   const {_id} = req.query;
-  if (!["admin", "subAdmin"].includes(req.user.role)) {
+  if (!["admin", "superAdmin"].includes(req.user.role)) {
     return next(
       new AppError("You don't have the permission to perform this action", 500)
     );
