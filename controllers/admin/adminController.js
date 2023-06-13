@@ -225,29 +225,36 @@ exports.getSingleAdmin = catchAsync(async (req, res, next) => {
 exports.editAdmin = catchAsync(async (req, res, next) => {
   const { name, image, adminId, role } = req.body;
 
+  if(adminId){
+    const admin = await adminModel.findById(adminId);
+    if (!admin) return next(new AppError("Invalid admin", 500));
+    if(admin.role="superAdmin" && req.user.role !== "superAdmin"){
+      return next(new AppError("You are not authorized to perform this action", 403));
+    }
+  }
+
+  if (role){
+    if (req.user.role !== "superAdmin"){
+      return next(
+        new AppError("You don't have the permission to change role.", 403)
+      );
+    }
+  }
+
   const updatedAdmin = await adminModel.findOneAndUpdate(
     { _id: adminId || req.user._id },
     {
       $set: {
         name: name,
         image: image,
-        // role: role,
+        role: role,
       },
     },
     { new: true }
   );
 
 
-  if (role){
-    if (req.user.role !== "superAdmin"){
-      return next(
-        new AppError("You don't have the permission to do this activity.", 403)
-      );
-    }else{
-      updatedAdmin.role = role;
-      await updatedAdmin.save();
-    }
-  }
+
 
   return res.status(200).json({
     status: true,
