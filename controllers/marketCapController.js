@@ -144,7 +144,7 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
 
   let marketCap = await marketCapModel.findOne({marketCapId:id}).lean();
   if (!marketCap.description){
-    let id = marketCap._id
+
     const response = await axios.get(`${CRYPTO_TRACKER_URL}/coins/${id}`, {
       params: {
         localization: false,
@@ -156,7 +156,8 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
     });
     const descriptionString = response.data.description.en.replace(/<[^>]+>/g, '');
     console.log(descriptionString);
-    marketCap = await marketCapModel.findByIdAndUpdate(id,{
+    let _id = marketCap._id
+    marketCap = await marketCapModel.findByIdAndUpdate(_id,{
       description:descriptionString,
       homepageUrl:response.data.links.homepage,
     },{new:true})
