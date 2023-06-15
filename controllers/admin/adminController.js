@@ -810,14 +810,27 @@ exports.getNewsOrBlogs = getData(contentModel);
 exports.createNewUser = catchAsync(async (req, res, next) => {
   const { email, password, name, image } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  const user = await firebase.auth().createUser({
-    email: email,
-    password: hashedPassword,
-    displayName: name,
-    photoURL: image,
-  });
-  if (!user) {
-    return next(new AppError("Unable to create user", 500));
+
+  let user
+  if (image != ""){
+    user = await firebase.auth().createUser({
+      email: email,
+      password: hashedPassword,
+      displayName: name,
+      photoURL: image,
+    });
+    if (!user) {
+      return next(new AppError("Unable to create user", 500));
+    }
+  }else{
+    user = await firebase.auth().createUser({
+      email: email,
+      password: hashedPassword,
+      displayName: name,
+    });
+    if (!user) {
+      return next(new AppError("Unable to create user", 500));
+    }
   }
   const verifyEmail = await firebase
     .auth()
