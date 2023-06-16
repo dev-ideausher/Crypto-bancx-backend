@@ -34,8 +34,8 @@ app.use(
 // app.use(bodyParser.json());
 
 // Express 4.0
-app.use(bodyParser.json({ limit: '20mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
+app.use(bodyParser.json({ limit: '25mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '25mb' }));
 
 // // Express 3.0
 // app.use(express.json({ limit: '10mb' }));

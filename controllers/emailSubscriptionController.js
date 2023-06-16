@@ -9,14 +9,20 @@ exports.addEmailSubscription = catchAsync(async (req, res, next) => {
     let emailSubscription = await EmailSubscriptionModel.findOne({email:email})
     if(!emailSubscription){
         emailSubscription = await EmailSubscriptionModel.create({email:email})
-    }
-    let user = {email:email}
+        let user = {email:email}
+        await new Email(user, {}).emailSubscription();
 
-    await new Email(user, {}).emailSubscription();
+
+        return res.status(200).json({
+            status: true,
+            message: "Email Subscribed",
+            emailSubscription: emailSubscription,
+          });
+    }
 
     return res.status(200).json({
         status: true,
-        message: "Email Subscribed",
+        message: "Email already Subscribed",
         emailSubscription: emailSubscription,
       });
 })
