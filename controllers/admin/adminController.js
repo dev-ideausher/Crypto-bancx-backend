@@ -327,7 +327,7 @@ exports.forgotPassword = async (req, res, next) => {
       console.log("resetToken",resetToken)
       await checkAdmin.save()
       try {
-          const resetLink = req.protocol + "://" + req.get('host') + '/admin/resetPassword?token=' + resetToken;
+          const resetLink = req.protocol + "://" + req.get('host') + API_VERSION + '/admin/resetPassword?token=' + resetToken;
           console.log("reset link",resetLink);
           await new Email(checkAdmin, { resetLink }).forgotPassword();
           return res.status(200).json({
