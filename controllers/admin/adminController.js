@@ -3,7 +3,7 @@ const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcryptjs");
 const crypto = require('crypto');
 const AppError = require("../../utils/appError");
-const { JWT_EXPIRY_TIME } = require("../../config/config");
+const { JWT_EXPIRY_TIME, API_VERSION } = require("../../config/config");
 const {
   generateJWTToken,
   generateRefreshToken,
