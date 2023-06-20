@@ -327,7 +327,7 @@ exports.forgotPassword = async (req, res, next) => {
       console.log("resetToken",resetToken)
       await checkAdmin.save()
       try {
-          const resetLink = req.protocol + "://" + req.get('host') + '/admin/resetPassword?token=' + resetToken;
+          const resetLink = req.protocol + "://" + req.get('host') + '/api/v1/admin/resetPassword?token=' + resetToken;
           console.log("reset link",resetLink);
           await new Email(checkAdmin, { resetLink }).forgotPassword();
           return res.status(200).json({
@@ -357,7 +357,7 @@ exports.getResetPassword = async(req , res , next) => {
 
   const {token} = req.query;
 
-  const url = req.protocol + "://" + req.get('host')+'/admin/resetPassword';
+  const url = req.protocol + "://" + req.get('host')+'/api/v1/admin/resetPassword';
 
   res.render('forgotPassword', {
     pageTitle: 'Reset Password',
