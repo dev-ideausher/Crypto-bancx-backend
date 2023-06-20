@@ -357,7 +357,7 @@ exports.getResetPassword = async(req , res , next) => {
 
   const {token} = req.query;
 
-  const url = req.protocol + "://" + req.get('host')+`${API_VERSION}/admin/resetPassword`;
+  const url = "https://" + req.get('host')+`${API_VERSION}/admin/resetPassword`;
 
   res.render('forgotPassword', {
     pageTitle: 'Reset Password',
