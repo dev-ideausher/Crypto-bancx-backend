@@ -3,7 +3,7 @@ const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcryptjs");
 const crypto = require('crypto');
 const AppError = require("../../utils/appError");
-const { JWT_EXPIRY_TIME } = require("../../config/config");
+const { JWT_EXPIRY_TIME, API_VERSION } = require("../../config/config");
 const {
   generateJWTToken,
   generateRefreshToken,
@@ -327,7 +327,7 @@ exports.forgotPassword = async (req, res, next) => {
       console.log("resetToken",resetToken)
       await checkAdmin.save()
       try {
-          const resetLink = req.protocol + "://" + req.get('host') + '/api/v1/admin/resetPassword?token=' + resetToken;
+          const resetLink = req.protocol + "://" + req.get('host') +`${API_VERSION}/admin/resetPassword?token=` + resetToken;
           console.log("reset link",resetLink);
           await new Email(checkAdmin, { resetLink }).forgotPassword();
           return res.status(200).json({
@@ -357,7 +357,7 @@ exports.getResetPassword = async(req , res , next) => {
 
   const {token} = req.query;
 
-  const url = req.protocol + "://" + req.get('host')+'/api/v1/admin/resetPassword';
+  const url = req.protocol + "://" + req.get('host')+`${API_VERSION}/admin/resetPassword`;
 
   res.render('forgotPassword', {
     pageTitle: 'Reset Password',
