@@ -1,6 +1,6 @@
 const catchAsync = require("../utils/catchAsync");
 const { default: axios } = require("axios");
-const { CRYPTO_TRACKER_URL } = require("../config/config");
+const { CRYPTO_TRACKER_URL, CRYPTO_CANDLE_URL } = require("../config/config");
 const watchListModel = require("../models/watchlistModel");
 const CC = require('currency-converter-lt')
 const currencyModel = require('../models/currencyModel')
@@ -237,22 +237,103 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
     let {id,days,currency} = req.query
     let interval
     // 1/7/14/30/90/180/365/max
-    if(days != "1"){
-      interval = "daily"
+    let start
+    let end = Math.floor(Date.now() / 1000).toString();
+    let cryptoData =[]
+    let product_id
+    if(id){
+      id =id.toUpperCase() + "-" + currency.toUpperCase();
+      product_id = id
     }
-  
-    let ohlc = await axios.get(
-      `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
-    )
 
-    const cryptoData = ohlc.data;
+    switch(days){
+      case "1":
+        var oneDay = 24 * 60 * 60 * 1000; // Number of milliseconds in one day
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - oneDay); // Subtract one day from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "3600";
+        break;
+      case "7":
+        var sevenDays = 7 * 24 * 60 * 60 * 1000; // Number of milliseconds in seven days
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - sevenDays); // Subtract seven days from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "21600";
+        break;
+      case "30":
+        var oneMonth = 30 * 24 * 60 * 60 * 1000; // Number of milliseconds in thirty days
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - oneMonth); // Subtract thirty days from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "86400";
+        break;
+      case "90":
+        var threeMonth = 90 * 24 * 60 * 60 * 1000; // Number of milliseconds in ninty days
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - threeMonth); // Subtract ninty days from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "259200";
+        break;
+      case "180":
+        var sixMonth = 180 * 24 * 60 * 60 * 1000; // Number of milliseconds in 6 month
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - sixMonth); // Subtract 6 month from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "518400";
+        break;
+      case "365":
+        var oneYear = 365 * 24 * 60 * 60 * 1000; // Number of milliseconds in 1 year
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - oneYear); // Subtract 1 year from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "1296000";
+        break;
+      default:
+        var currentDate = new Date(); // Current date and time
+        var previousDate = new Date(currentDate.getTime() - oneDay); // Subtract one day from current date
+        start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
+        interval = "3600"
+        break;
+    }
+
+    console.log(start)
+    console.log(end)
+    let config = {
+      method: 'get',
+      // url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=1687338559&end=1687425590`,
+      url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=${start}&end=${end}`,
+      headers: { 
+        'Content-Type': 'application/json'
+      }
+    };
+
+    await axios(config)
+      .then((response) => {
+        // ohlc = JSON.stringify(response.data);
+        cryptoData = response.data
+        console.log(JSON.stringify(response.data))
+      })
+      .catch((error) => {
+      console.log(error);
+    });
+
+  
+    // let ohlc = await axios.get(
+    //   `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
+    // )
+    // let ohlc = await axios.get(
+
+    // )
+
+    // const cryptoData = ohlc.data;
 
     // Find the highest high and lowest low
     let highestHigh = -Infinity;
     let lowestLow = Infinity;
   
     for (const data of cryptoData) {
-      const [time, open, highValue, lowValue, close] = data;
+      const [time, highValue, lowValue, open, close, volume] = data;
   
       highestHigh = Math.max(highestHigh, highValue);
       lowestLow = Math.min(lowestLow, lowValue);
@@ -261,8 +342,8 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
     const firstData = cryptoData[0];
     const lastData = cryptoData[cryptoData.length - 1];
   
-    const [firstTime, firstOpen, , , firstClose] = firstData;
-    const [lastTime, , , , lastClose] = lastData;
+    const [firstTime, , , firstOpen, firstClose, ] = firstData;
+    const [lastTime, , , , lastClose, ] = lastData;
   
     const change = ((lastClose - firstOpen) / firstOpen) * 100;
 
