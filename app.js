@@ -26,7 +26,9 @@ app.use(
       "http://localhost:3000",
       "http://localhost:3002",
       "https://web-crypto-banc-x-admin.vercel.app",
-      "https://web-crypto-banc-x.vercel.app"
+      "https://web-crypto-banc-x.vercel.app",
+      "https://cryptobancx.com",
+      "https://www.cryptobancx.com"
     ],
   })
 );
