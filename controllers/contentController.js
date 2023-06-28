@@ -669,14 +669,14 @@ exports.relatedNews = catchAsync(async (req, res, next) => {
   const { coinId, coinName } = req.query;
 
   const regexQuery = {
-    $or: [
-      { title: new RegExp(coinId, 'i') },
-      { title: new RegExp(coinName, 'i') }
-    ]
+      $or: [
+        { title: { $regex: new RegExp(coinId, 'i') } },
+        { title: { $regex: new RegExp(coinName, 'i') } },
+      ],
   };
 
   let recommended = await contentModel
-    .find({ type: "news", isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}, ...regexQuery})
+    .find({ type: "news", isActive:true ,isDraft:false, isApproved:true ,isDeleted:false, })
     .populate("author", "name email image")
     .sort({ viewCount: -1 })
     .limit(5);
