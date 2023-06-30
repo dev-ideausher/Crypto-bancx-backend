@@ -28,7 +28,8 @@ app.use(
       "https://web-crypto-banc-x-admin.vercel.app",
       "https://web-crypto-banc-x.vercel.app",
       "https://cryptobancx.com",
-      "https://www.cryptobancx.com"
+      "https://www.cryptobancx.com",
+      "https://admin.cryptobancx.com"
     ],
   })
 );
