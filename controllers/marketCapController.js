@@ -1,11 +1,12 @@
 const catchAsync = require("../utils/catchAsync");
+const AppError = require("../utils/appError");
 const { default: axios } = require("axios");
 const { CRYPTO_TRACKER_URL, CRYPTO_CANDLE_URL } = require("../config/config");
 const watchListModel = require("../models/watchlistModel");
 const CC = require('currency-converter-lt')
 const currencyModel = require('../models/currencyModel')
 
-const marketCapModel = require("../models/marketCapModel")
+const marketCapModel = require("../models/marketCapModel");
 
 
 const MAX_MARKET_LIMIT = 250
@@ -167,6 +168,8 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
       const watchListedId = await watchListModel.findOne({id:id, userId: req.user._id })
       if (watchListedId){
         marketCap.isWishListed=true;
+      }else{
+        marketCap.isWishListed=false;
       }
     } 
   }
@@ -234,7 +237,7 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 
 
 exports.graphOhlc = catchAsync(async (req, res, next) => {
-    let {id,days,currency} = req.query
+    let {id,cryptoId,days,currency} = req.query
     let interval
     // 1/7/14/30/90/180/365/max
     let start
@@ -273,21 +276,25 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
         var currentDate = new Date(); // Current date and time
         var previousDate = new Date(currentDate.getTime() - threeMonth); // Subtract ninty days from current date
         start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
-        interval = "259200";
+        // interval = "259200";
+        interval = "86400";
+
         break;
       case "180":
         var sixMonth = 180 * 24 * 60 * 60 * 1000; // Number of milliseconds in 6 month
         var currentDate = new Date(); // Current date and time
         var previousDate = new Date(currentDate.getTime() - sixMonth); // Subtract 6 month from current date
         start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
-        interval = "518400";
+        // interval = "518400";
+        interval = "86400";
         break;
       case "365":
         var oneYear = 365 * 24 * 60 * 60 * 1000; // Number of milliseconds in 1 year
         var currentDate = new Date(); // Current date and time
         var previousDate = new Date(currentDate.getTime() - oneYear); // Subtract 1 year from current date
         start = Math.floor(previousDate.getTime() / 1000).toString(); // Convert to timestamp (in seconds)
-        interval = "1296000";
+        // interval = "1296000";
+        interval = "86400";
         break;
       default:
         var currentDate = new Date(); // Current date and time
@@ -299,29 +306,78 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
 
     console.log(start)
     console.log(end)
-    let config = {
-      method: 'get',
-      // url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=1687338559&end=1687425590`,
-      url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=${start}&end=${end}`,
-      headers: { 
-        'Content-Type': 'application/json'
+
+    let highestHigh = -Infinity;
+    let lowestLow = Infinity;
+    let firstData
+    let lastData
+    let change
+
+    if(days == '365'){
+      let ohlc = await axios.get(
+        `${CRYPTO_TRACKER_URL}/coins/${cryptoId}/ohlc?vs_currency=${currency}&days=${days}`
+      )
+      cryptoData = ohlc.data
+
+      for (const data of cryptoData) {
+        const [time, open, highValue, lowValue, close] = data;
+
+        highestHigh = Math.max(highestHigh, highValue);
+        lowestLow = Math.min(lowestLow, lowValue);
       }
-    };
 
-    await axios(config)
-      .then((response) => {
-        // ohlc = JSON.stringify(response.data);
-        cryptoData = response.data
-        console.log(JSON.stringify(response.data))
-      })
-      .catch((error) => {
-      console.log(error);
-    });
+      firstData = cryptoData[0];
+      lastData = cryptoData[cryptoData.length - 1];
 
+      const [firstTime, firstOpen, , , firstClose] = firstData;
+      const [lastTime, , , , lastClose] = lastData;
+
+      change = ((lastClose - firstOpen) / firstOpen) * 100;
+
+      const newCryptoData = cryptoData.map(data => {
+        const [time, open, highValue, lowValue, close] = data;
+        return [time, highValue, lowValue, open, close];
+      });
+    }else{
+      let config = {
+        method: 'get',
+        // url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=1687338559&end=1687425590`,
+        // url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=${start}&end=${end}`,
+        url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=${start}&end=${end}`,
+        headers: { 
+          'Content-Type': 'application/json'
+        }
+      };
   
-    // let ohlc = await axios.get(
-    //   `${CRYPTO_TRACKER_URL}/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`
-    // )
+      await axios(config)
+        .then((response) => {
+          // ohlc = JSON.stringify(response.data);
+          cryptoData = response.data
+          console.log(JSON.stringify(response.data))
+        })
+        .catch((error) => {
+        console.log(error);
+        return next(new AppError("Error: Something went wrong", 400));
+      });
+
+
+      for (const data of cryptoData) {
+        const [time, highValue, lowValue, open, close, volume] = data;
+    
+        highestHigh = Math.max(highestHigh, highValue);
+        lowestLow = Math.min(lowestLow, lowValue);
+      }
+  
+      firstData = cryptoData[0];
+      lastData = cryptoData[cryptoData.length - 1];
+    
+      const [firstTime, , , firstOpen, firstClose, ] = firstData;
+      const [lastTime, , , , lastClose, ] = lastData;
+    
+      change = ((lastClose - firstOpen) / firstOpen) * 100;
+    }
+
+
     // let ohlc = await axios.get(
 
     // )
@@ -329,25 +385,8 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
     // const cryptoData = ohlc.data;
 
     // Find the highest high and lowest low
-    let highestHigh = -Infinity;
-    let lowestLow = Infinity;
-  
-    for (const data of cryptoData) {
-      const [time, highValue, lowValue, open, close, volume] = data;
-  
-      highestHigh = Math.max(highestHigh, highValue);
-      lowestLow = Math.min(lowestLow, lowValue);
-    }
 
-    const firstData = cryptoData[0];
-    const lastData = cryptoData[cryptoData.length - 1];
-  
-    const [firstTime, , , firstOpen, firstClose, ] = firstData;
-    const [lastTime, , , , lastClose, ] = lastData;
-  
-    const change = ((lastClose - firstOpen) / firstOpen) * 100;
 
-  
     return res.status(200).json({
       status: true, 
       high: highestHigh,
@@ -369,7 +408,6 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
       cryptoData:  marketRange.data
     });
   })
-  
   
   
   exports.graphMarketChart = catchAsync(async (req, res, next) => {
