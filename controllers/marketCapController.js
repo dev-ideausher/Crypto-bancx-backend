@@ -142,6 +142,7 @@ exports.cryptoMarketsNoAuth = catchAsync(async (req, res, next) => {
 //single coin auth and no auth
 exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
   let id = req.params.id
+  let {currency} = req.query
 
   let marketCap = await marketCapModel.findOne({marketCapId:id}).lean();
   if (!marketCap.description){
@@ -205,9 +206,45 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
         order.push(originOrder);
       }
     }
+
+    console.log(order)
+    let similarCoins = await marketCapModel.find({order:{$in:order}}).limit(4)
+
+    if(currency){
+      let currencyVal = await currencyModel.findOne({})
+      switch (currency) {
+        // case "USD":
     
-      console.log(order)
-      let similarCoins = await marketCapModel.find({order:{$in:order}}).limit(4)
+        //   break;
+        case "INR":
+          marketCap.data.current_price = marketCap.data.current_price * currencyVal.INR;
+            // e.data.price_change_percentage_24h=price_change_percentage_24h;
+          marketCap.data.market_cap = marketCap.data.market_cap * currencyVal.INR;
+          marketCap.data.high_24h = marketCap.data.high_24h * currencyVal.INR;
+          marketCap.data.low_24h = marketCap.data.low_24h * currencyVal.INR;
+          
+          break;
+        case "GBP":      
+          marketCap.data.current_price = marketCap.data.current_price * currencyVal.GBP;
+            // e.data.price_change_percentage_24h=price_change_percentage_24h;
+          marketCap.data.market_cap = marketCap.data.market_cap * currencyVal.GBP;
+          marketCap.data.high_24h = marketCap.data.high_24h * currencyVal.GBP;
+          marketCap.data.low_24h = marketCap.data.low_24h * currencyVal.GBP;
+
+          break;
+        case "EUR":
+          marketCap.data.current_price = marketCap.data.current_price * currencyVal.EUR;
+              // e.data.price_change_percentage_24h=price_change_percentage_24h;
+          marketCap.data.market_cap = marketCap.data.market_cap * currencyVal.EUR;
+          marketCap.data.market_cap = marketCap.data.market_cap * currencyVal.EUR;
+          marketCap.data.high_24h = marketCap.data.high_24h * currencyVal.EUR;
+ 
+          break;
+        default:
+          // Handle other currencies here if needed
+          break;
+      }
+    }
 
   return res.status(200).json({
     status: true, 
@@ -227,7 +264,7 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 
   let suggestion = await marketCapModel
     .find({...regexQuery})
-    .select("marketCapId")
+    .select("marketCapId data.price_change_percentage_24h data.market_cap data.current_price data.image data.symbol data.name")
     .limit(5);
 
   return res.status(200).json({ status: true, message: "", data: suggestion });

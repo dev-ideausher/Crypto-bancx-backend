@@ -12,7 +12,8 @@ const { CRYPTO_TRACKER_URL } = require("../config/config");
 const testimonialModel = require("../models/testimonials");
 const tagModel = require("../models/tagModel");
 const watchListModel = require("../models/watchlistModel");
-const marketCapModel = require("../models/marketCapModel")
+const marketCapModel = require("../models/marketCapModel");
+const currencyModel = require('../models/currencyModel')
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
@@ -195,12 +196,12 @@ exports.addOrRemoveToWatchList = catchAsync(async (req, res, next) => {
 
 //get all watchlist coins
 exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
-  const { limit = 10, page = 1 } = req.query;
+  const { limit = 10, page = 1 , currency} = req.query;
 
   const watchListCoins = await watchListModel
     .find({ userId: req.user._id })
     .select('id');
-
+    
   if (watchListCoins.length === 0) {
     return res.status(400).json({ status: false, message: "no data found", data: "" });
   }
@@ -214,6 +215,37 @@ exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
     .limit(limit)
     .select('data');
   const data = finalData.map((coin)=> coin.data)  
+
+
+
+  if (currency){
+    let currencyVal = await currencyModel.findOne({})
+    switch (currency) {
+      case "INR":
+        data.forEach(async e=>{
+          e.current_price = e.current_price * currencyVal.INR;
+          e.market_cap = e.market_cap * currencyVal.INR;
+        })
+        
+        break;
+      case "GBP":      
+        data.forEach(async e=>{
+          e.current_price = e.current_price * currencyVal.GBP;
+          e.market_cap = e.market_cap * currencyVal.GBP;
+        })
+        break;
+      case "EUR":
+        data.forEach(async e=>{
+            e.current_price = e.current_price * currencyVal.EUR;
+            e.market_cap = e.market_cap * currencyVal.EUR;
+        })
+  
+        break;
+      default:
+        // Handle other currencies here if needed
+        break;
+    }
+  }
 
   return res.status(200).json({ status: true, message: "", data: data, totalPages: totalPages });
 });
