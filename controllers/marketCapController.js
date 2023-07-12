@@ -256,7 +256,7 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
 
 
 exports.searchListSuggestion = catchAsync(async (req, res, next) => {
-  const { search } = req.query;
+  const { search , currency} = req.query;
 
   const regexQuery = {
       marketCapId: new RegExp(search, 'i')
@@ -266,6 +266,49 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
     .find({...regexQuery})
     .select("marketCapId data.price_change_percentage_24h data.market_cap data.current_price data.image data.symbol data.name")
     .limit(5);
+  
+
+  
+    if(currency){
+      let currencyVal = await currencyModel.findOne({})
+      switch (currency) {
+        // case "USD":
+    
+        //   break;
+        case "INR":
+          suggestion.forEach(async e=>{
+            e.data.current_price = e.data.current_price * currencyVal.INR;
+            // e.data.price_change_percentage_24h=price_change_percentage_24h;
+            e.data.market_cap = e.data.market_cap * currencyVal.INR;
+            e.data.high_24h = e.data.high_24h * currencyVal.INR;
+            e.data.low_24h = e.data.low_24h * currencyVal.INR;
+          })
+          break;
+        case "GBP":      
+          suggestion.forEach(async e=>{
+            e.data.current_price = e.data.current_price * currencyVal.GBP;
+            // e.data.price_change_percentage_24h=price_change_percentage_24h;
+            e.data.market_cap = e.data.market_cap * currencyVal.GBP;
+            e.data.high_24h = e.data.high_24h * currencyVal.GBP;
+            e.data.low_24h = e.data.low_24h * currencyVal.GBP;
+          })
+          break;
+        case "EUR":
+          suggestion.forEach(async e=>{
+            e.data.current_price = e.data.current_price * currencyVal.EUR;
+              // e.data.price_change_percentage_24h=price_change_percentage_24h;
+            e.data.market_cap = e.data.market_cap * currencyVal.EUR;
+            e.data.market_cap = e.data.market_cap * currencyVal.EUR;
+            e.data.high_24h = e.data.high_24h * currencyVal.EUR;
+          })
+          break;
+        default:
+          // Handle other currencies here if needed
+          break;
+      }
+    }
+
+
 
   return res.status(200).json({ status: true, message: "", data: suggestion });
 })
