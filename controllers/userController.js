@@ -13,7 +13,9 @@ const testimonialModel = require("../models/testimonials");
 const tagModel = require("../models/tagModel");
 const watchListModel = require("../models/watchlistModel");
 const marketCapModel = require("../models/marketCapModel");
-const currencyModel = require('../models/currencyModel')
+const currencyModel = require('../models/currencyModel');
+
+const {auth} = require('firebase-admin');
 // YlVbbd6pzYTJaXI3ocDvqVajEC32
 
 exports.userOnboarding = catchAsync(async (req, res, next) => {
@@ -201,7 +203,7 @@ exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
   const watchListCoins = await watchListModel
     .find({ userId: req.user._id })
     .select('id');
-    
+
   if (watchListCoins.length === 0) {
     return res.status(400).json({ status: false, message: "no data found", data: "" });
   }
@@ -255,3 +257,38 @@ exports.logout = catchAsync(async (req, res, next) => {
   res.clearCookie("token");
   return res.status(200).json({ status: true });
 });
+
+exports.deleteUser = catchAsync(async(req , res , next) => {
+
+  const user = req.user;
+  let err;
+
+  await auth()
+      .deleteUser(user.firebaseUid)
+      .then((result) => {
+          console.log('Successfully deleted user');
+      })
+      .catch((error) => {
+          err = 'Error deleting user:'+ error;
+          console.log(err);
+          console.log('Error deleting user:', error);
+      });
+
+
+  if(err){
+      console.log(err);console.log(typeof(x2));
+      return res.status(200).json({
+          status:false,
+          msg: err,
+      });
+  }
+
+  user.isDeleted = 1;
+  user.firebaseUid = null;
+  await user.save();
+
+  return res.status(200).json({
+      status:true,
+      msg: 'User deleted successfully',
+  });
+})

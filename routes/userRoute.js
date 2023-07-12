@@ -13,6 +13,7 @@ const emailSubscriptionController = require("../controllers/emailSubscriptionCon
 const router = require("express").Router();
 
 router.post("/onboarding", requiresAuth, userController.userOnboarding);
+router.delete("/delete",requiresAuth, userController.deleteUser)
 // router.post("/login",requiresAuth,userController.login);
 router.post("/add", userController.addUser);
 router.post("/add-comment", requiresAuth, userController.addComment);
