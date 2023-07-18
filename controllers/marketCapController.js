@@ -415,8 +415,9 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
 
       change = ((lastClose - firstOpen) / firstOpen) * 100;
 
-      const newCryptoData = cryptoData.map(data => {
-        const [time, open, highValue, lowValue, close] = data;
+      cryptoData = cryptoData.map(data => {
+        let [time, open, highValue, lowValue, close] = data;
+        time = Math.floor(time / 1000);
         return [time, lowValue, highValue, open, close];
       });
     }else{
