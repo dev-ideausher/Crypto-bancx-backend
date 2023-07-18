@@ -329,6 +329,7 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
       product_id = id
     }
 
+    // console.log("product_id",product_id)
     switch(days){
       case "1":
         var oneDay = 24 * 60 * 60 * 1000; // Number of milliseconds in one day
@@ -416,7 +417,7 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
 
       const newCryptoData = cryptoData.map(data => {
         const [time, open, highValue, lowValue, close] = data;
-        return [time, highValue, lowValue, open, close];
+        return [time, lowValue, highValue, open, close];
       });
     }else{
       let config = {
@@ -442,7 +443,7 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
 
 
       for (const data of cryptoData) {
-        const [time, highValue, lowValue, open, close, volume] = data;
+        const [time, lowValue,highValue, open, close, volume] = data;
     
         highestHigh = Math.max(highestHigh, highValue);
         lowestLow = Math.min(lowestLow, lowValue);
