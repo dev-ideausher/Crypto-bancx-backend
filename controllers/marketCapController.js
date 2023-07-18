@@ -457,6 +457,8 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
       const [lastTime, , , , lastClose, ] = lastData;
     
       change = ((lastClose - firstOpen) / firstOpen) * 100;
+      
+      cryptoData = cryptoData.sort((a, b) => a[0] - b[0]);
     }
 
 
