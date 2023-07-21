@@ -258,12 +258,12 @@ exports.singleCryptoMarket = catchAsync(async (req, res, next) => {
 exports.searchListSuggestion = catchAsync(async (req, res, next) => {
   const { search , currency} = req.query;
 
-  const regexQuery = {
+  const regexQuery ={
       marketCapId: new RegExp(search, 'i')
-  };
+  }
 
   let suggestion = await marketCapModel
-    .find({...regexQuery})
+    .find(regexQuery)
     .select("marketCapId data.price_change_percentage_24h data.market_cap data.current_price data.image data.symbol data.name")
     .limit(5);
   
