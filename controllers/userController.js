@@ -204,9 +204,9 @@ exports.getAllWatchListCoins = catchAsync(async (req, res, next) => {
     .find({ userId: req.user._id })
     .select('id');
 
-  if (watchListCoins.length === 0) {
-    return res.status(400).json({ status: false, message: "no data found", data: "" });
-  }
+  // if (watchListCoins.length === 0) {
+  //   return res.status(400).json({ status: false, message: "no data found", data: "" });
+  // }
 
   const coinIds = watchListCoins.map((coin) => coin.id);
   const count = await marketCapModel.countDocuments({ marketCapId: { $in: coinIds } });
