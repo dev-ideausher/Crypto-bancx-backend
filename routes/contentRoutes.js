@@ -56,5 +56,9 @@ router.get("/related-news", contentController.relatedNews);
 router.get("/recommended-news",contentController.recommendedMarketNews);
 router.get("/search-suggestion", contentController.searchListSuggestion);
 
+router.get("/update-new-from-Api", contentController.updateNewsFromApi);
+
+
+
 
 module.exports = router;

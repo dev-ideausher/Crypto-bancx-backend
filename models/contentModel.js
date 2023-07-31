@@ -15,9 +15,11 @@ const schema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
-      maxLength: [500, "description should be less than 301 characters."],
+      // maxLength: [1000, "description should be less than 301 characters."],
     },
-
+    url:{
+      type: String,
+    },
     content: {
       type: String,
       required: [true, "Provide  news to add"],
@@ -28,7 +30,6 @@ const schema = new mongoose.Schema(
       required: [true, "Provide author of the news"],
       refPath: "onModel",
     },
-
     thumbnail: {
       type: String,
       required: true,
@@ -42,6 +43,11 @@ const schema = new mongoose.Schema(
       type: String,
       enum: ["blog", "news"],
       required: [true, "Provide type of content"],
+    },
+    newsType:{
+      type: String,
+      enum: ["admin", "api"],
+      default: "admin"
     },
     ViewCount: {
       type: Number,
