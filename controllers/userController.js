@@ -276,8 +276,9 @@ exports.deleteUser = catchAsync(async(req , res , next) => {
 
 
   if(err){
-      console.log(err);console.log(typeof(x2));
-      return res.status(200).json({
+      console.log(err);
+      // console.log(typeof());
+      return res.status(500).json({
           status:false,
           msg: err,
       });
@@ -287,6 +288,7 @@ exports.deleteUser = catchAsync(async(req , res , next) => {
   user.firebaseUid = null;
   await user.save();
 
+  console.log('User deleted successfully');
   return res.status(200).json({
       status:true,
       msg: 'User deleted successfully',
