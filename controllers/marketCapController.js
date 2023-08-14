@@ -325,11 +325,13 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
     let cryptoData =[]
     let product_id
     if(id){
-      id =id.toUpperCase() + "-" + currency.toUpperCase();
-
       if(currency.toUpperCase() == "INR"){
         id = id.toUpperCase() + "-USD"
+      }else{
+        id =id.toUpperCase() + "-" + currency.toUpperCase();
       }
+
+      
       product_id = id
     }
 
