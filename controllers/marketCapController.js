@@ -430,6 +430,8 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
           'Content-Type': 'application/json'
         }
       };
+
+      console.log(config);
   
       await axios(config)
         .then((response) => {

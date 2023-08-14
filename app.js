@@ -12,6 +12,8 @@ const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController");
 require('aws-sdk/lib/maintenance_mode_message').suppress = true;
 
+require("./cron/index")
+
 const app = express();
 
 //middleware's

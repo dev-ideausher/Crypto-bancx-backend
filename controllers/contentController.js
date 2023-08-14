@@ -426,7 +426,11 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 // search
 exports.search = catchAsync(async (req, res, next) => {
   const { query, type } = req.query;
-  
+
+  var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+  if(format.test(query)){
+    return next(new AppError("invalid query", 400));
+  }
   const doc = await contentModel.aggregate([
       {
           $lookup: {

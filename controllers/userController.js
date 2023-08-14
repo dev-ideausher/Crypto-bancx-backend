@@ -274,7 +274,6 @@ exports.deleteUser = catchAsync(async(req , res , next) => {
           console.log('Error deleting user:', error);
       });
 
-
   if(err){
       console.log(err);
       // console.log(typeof());
