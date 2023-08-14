@@ -326,6 +326,10 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
     let product_id
     if(id){
       id =id.toUpperCase() + "-" + currency.toUpperCase();
+
+      if(currency.toUpperCase() == "INR"){
+        id = id.toUpperCase() + "-USD"
+      }
       product_id = id
     }
 
@@ -421,6 +425,9 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
         return [time, lowValue, highValue, open, close];
       });
     }else{
+
+
+
       let config = {
         method: 'get',
         // url: `${CRYPTO_CANDLE_URL}/products/${product_id}/candles?granularity=${interval}&start=1687338559&end=1687425590`,
@@ -461,6 +468,22 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
       change = ((lastClose - firstOpen) / firstOpen) * 100;
       
       cryptoData = cryptoData.sort((a, b) => a[0] - b[0]);
+
+      if(currency.toUpperCase() == "INR"){
+
+        let currencyVal = await currencyModel.findOne({})
+
+        cryptoData = cryptoData.map( data => {
+
+          data[1] = data[1] * currencyVal.INR;
+          data[2] = data[2] * currencyVal.INR;
+          data[3] = data[3] * currencyVal.INR;
+          data[4] = data[4] * currencyVal.INR;
+
+          return data;
+
+        })
+      }
     }
 
 
