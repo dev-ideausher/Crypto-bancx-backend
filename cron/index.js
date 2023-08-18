@@ -3,16 +3,21 @@ const contentModel = require("../models/contentModel");
 const { get_news } = require("../utils/newsApi");
 const redisClient = require("../config/redis");
 const cron = require('node-cron');
+const catchAsync = require("../utils/catchAsync");
+const { ADMIN_EMAIL } = require("../config/config");
 
 console.log("test1");
 
-const task = cron.schedule('0 1 * * *', async() => {
+const task = cron.schedule('1 1 * * *', catchAsync(async() => {
+  
     console.log("test");
     const getNews = await get_news();
-
+    console.log("getNews");
+ 
     const user = await adminModel.findOne({email:ADMIN_EMAIL});
+    console.log("get user");
 
-    const updateNews = getNews.map(async element => {
+    const updateNews = await getNews.map(async element => {
       const {
         title,
         description,
@@ -25,6 +30,7 @@ const task = cron.schedule('0 1 * * *', async() => {
 
       const findContent = await contentModel.findOne({title:title});
       let updatedContent;
+
     if (!findContent) {
       updatedContent = await contentModel.create(
           {
@@ -41,6 +47,8 @@ const task = cron.schedule('0 1 * * *', async() => {
           }
         );
     }else{
+      // console.log(findContent.title);
+
       updatedContent = await contentModel.findOneAndUpdate(
         { _id: findContent._id },
         {
@@ -85,7 +93,8 @@ const task = cron.schedule('0 1 * * *', async() => {
 
   });
   const update = await Promise.all(updateNews);
+  console.log(`all news are updated ${new Date()}`)
   return  "all news are updated" ;
-});
+}));
 
 task.start();
