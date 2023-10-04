@@ -29,5 +29,6 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   REDIS_HOST: process.env.REDIS_HOST,
   REDIS_PORT: process.env.REDIS_PORT,
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  C_NEW_API_KEY: process.env.C_NEW_API_KEY
 };
