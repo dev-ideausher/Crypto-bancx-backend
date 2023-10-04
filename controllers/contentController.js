@@ -9,7 +9,7 @@ const redis = require("redis");
 const redisClient = require("../config/redis");
 const topContentModel = require("../models/topContentModel");
 const videoModel = require("../models/videoModel");
-const { get_news } = require("../utils/newsApi");
+const { get_news, get_crypto_news } = require("../utils/newsApi");
 const { timeout } = require("nodemon/lib/config");
 const User = require("../models/userModel");
 const adminModel = require("../models/adminModel");
@@ -709,86 +709,193 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
 })
 
 
+// exports.updateNewsFromApi = catchAsync(async (req, res, next) => {
+
+//     const getNews = await get_news();
+
+//     const user = await adminModel.findOne({email:ADMIN_EMAIL});
+
+//     const updateNews = getNews.map(async element => {
+//       const {
+//         title,
+//         description,
+//         url,
+//         thumbnail
+//       } = element;
+
+//       let newDescription = description.replace( /(<([^>]+)>)/ig, '');
+//       newDescription = newDescription.replace("Continue reading...","");
+
+//       const findContent = await contentModel.findOne({title:title});
+//       let updatedContent;
+//     if (!findContent) {
+//       updatedContent = await contentModel.create(
+//           {
+//             title,
+//             description:newDescription,
+//             url,
+//             thumbnail,
+//             author: user._id,
+//             newsType:'api',
+//             type:"news",
+//             isApproved:true,
+//             isActive:true,
+//             content:"null"
+//           }
+//         );
+//     }else{
+//       updatedContent = await contentModel.findOneAndUpdate(
+//         { _id: findContent._id },
+//         {
+//           $set: {
+//             title,
+//             description:newDescription,
+//             url,
+//             thumbnail
+//           },
+//         },
+//         { new: true }
+//       );
+//     }
+//     if (!updatedContent){
+//       return next(new AppError("Couldn't update content.", 500));
+//     }
+
+//     const options = {
+//       TYPE: 'string', // `SCAN` only
+//       MATCH: `latest?type=${updatedContent.type}*`,
+//       COUNT: 100
+//     };
+  
+//     const scanIterator = redisClient.scanIterator(options);
+//     let keysToDelete = [];
+  
+//     (async () => {
+//       for await (const key of scanIterator) {
+//         keysToDelete.push(key);
+//       }
+    
+//       console.log('Keys to delete:', keysToDelete);
+    
+//       const deletedCount = await redisClient.del(keysToDelete);
+//       console.log(`Deleted ${deletedCount} keys.`);
+  
+//       let contentKey = `top-content/${updatedContent.type}`;
+    
+//       const deletedContent = await redisClient.del(contentKey);
+//       console.log(`Deleted ${deletedContent} keys.`);
+//     });
+
+//   });
+//   const update = await Promise.all(updateNews);
+//   return res.status(200).json({ status: true, message: "all news are updated" });
+
+// });
+  
 exports.updateNewsFromApi = catchAsync(async (req, res, next) => {
 
-    const getNews = await get_news();
+  const getNews = await get_crypto_news();
 
-    const user = await adminModel.findOne({email:ADMIN_EMAIL});
+  console.log(getNews)
 
-    const updateNews = getNews.map(async element => {
-      const {
-        title,
-        description,
-        url,
-        thumbnail
-      } = element;
+  const user = await adminModel.findOne({email:ADMIN_EMAIL});
 
-      let newDescription = description.replace( /(<([^>]+)>)/ig, '');
-      newDescription = newDescription.replace("Continue reading...","");
+  const updateNews = getNews.map(async element => {
+    const {
+      title,
+      text,
+      news_url,
+      topics,
+      image_url
+    } = element;
 
-      const findContent = await contentModel.findOne({title:title});
-      let updatedContent;
-    if (!findContent) {
-      updatedContent = await contentModel.create(
-          {
-            title,
-            description:newDescription,
-            url,
-            thumbnail,
-            author: user._id,
-            newsType:'api',
-            type:"news",
-            isApproved:true,
-            isActive:true,
-            content:"null"
-          }
-        );
-    }else{
-      updatedContent = await contentModel.findOneAndUpdate(
-        { _id: findContent._id },
+
+
+    let tags = [];
+    console.log(topics);
+    if(Array.isArray(topics)){
+      let get_topics = topics.map(async topic => {   
+        
+        let tag  = await tagModel.find({name:topic});
+        if(!tag){
+          tag = await tagModel.create({name:topic});
+        }
+        tags.push(tag._id);
+      });
+
+      get_topics = await Promise.all(get_topics)
+    }
+
+
+
+
+    // let newDescription = text.replace( /(<([^>]+)>)/ig, '');
+    // newDescription = newDescription.replace("Continue reading...","");
+
+    const findContent = await contentModel.findOne({title:title});
+    let updatedContent;
+  if (!findContent) {
+    updatedContent = await contentModel.create(
         {
-          $set: {
-            title,
-            description:newDescription,
-            url,
-            thumbnail
-          },
-        },
-        { new: true }
+          title,
+          description:text,
+          url:news_url,
+          thumbnail:image_url,
+          author: user._id,
+          newsType:'api',
+          type:"news",
+          tags:tags,
+          isApproved:true,
+          isActive:true,
+          content:"null"
+        }
       );
-    }
-    if (!updatedContent){
-      return next(new AppError("Couldn't update content.", 500));
-    }
+  }else{
+    updatedContent = await contentModel.findOneAndUpdate(
+      { _id: findContent._id },
+      {
+        $set: {
+          title,
+          description:text,
+          url:news_url,
+          thumbnail:image_url,
+          tags:tags,
+        },
+      },
+      { new: true }
+    );
+  }
+  if (!updatedContent){
+    return next(new AppError("Couldn't update content.", 500));
+  }
 
-    const options = {
-      TYPE: 'string', // `SCAN` only
-      MATCH: `latest?type=${updatedContent.type}*`,
-      COUNT: 100
-    };
-  
-    const scanIterator = redisClient.scanIterator(options);
-    let keysToDelete = [];
-  
-    (async () => {
-      for await (const key of scanIterator) {
-        keysToDelete.push(key);
-      }
-    
-      console.log('Keys to delete:', keysToDelete);
-    
-      const deletedCount = await redisClient.del(keysToDelete);
-      console.log(`Deleted ${deletedCount} keys.`);
-  
-      let contentKey = `top-content/${updatedContent.type}`;
-    
-      const deletedContent = await redisClient.del(contentKey);
-      console.log(`Deleted ${deletedContent} keys.`);
-    });
+  const options = {
+    TYPE: 'string', // `SCAN` only
+    MATCH: `latest?type=${updatedContent.type}*`,
+    COUNT: 100
+  };
 
+  const scanIterator = redisClient.scanIterator(options);
+  let keysToDelete = [];
+
+  (async () => {
+    for await (const key of scanIterator) {
+      keysToDelete.push(key);
+    }
+  
+    console.log('Keys to delete:', keysToDelete);
+  
+    const deletedCount = await redisClient.del(keysToDelete);
+    console.log(`Deleted ${deletedCount} keys.`);
+
+    let contentKey = `top-content/${updatedContent.type}`;
+  
+    const deletedContent = await redisClient.del(contentKey);
+    console.log(`Deleted ${deletedContent} keys.`);
   });
-  const update = await Promise.all(updateNews);
-  return res.status(200).json({ status: true, message: "all news are updated" });
 
 });
-  
+const update = await Promise.all(updateNews);
+return res.status(200).json({ status: true, message: "all news are updated" });
+
+});
