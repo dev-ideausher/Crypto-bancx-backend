@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { C_NEW_API_KEY } = require('../config/config');
 
 const get_news = async() => {
 
@@ -24,7 +25,7 @@ const get_news = async() => {
 const get_crypto_news = async() => {
 
 
-    const  api_key = "1bvxcanvjjxylmvp0npxwuhgzr9nsu5f3pqrvcai";
+    const  api_key = C_NEW_API_KEY;
 
 
     const options = {

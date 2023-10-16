@@ -663,6 +663,23 @@ exports.getVideos = catchAsync(async (req, res, next) => {
 });
 
 
+exports.getAllVideos = catchAsync(async (req, res, next) => {
+  const { _id } = req.query;
+  if (_id) {
+    const content = await videoModel
+      .findById(_id);
+    if (!content) {
+      return next(new AppError("Invalid id", 500));
+    }
+    return res.status(200).json({ status: true, message: "", data: content });
+  }
+
+  const video = await videoModel
+    .find({isActive:true,isApproved:true,isDeleted:{$ne:true}})
+    .sort({created_at:-1});
+  return res.status(200).json({ status: true, message: "", data: video });
+});
+
 //get recomended news
 exports.recommendedMarketNews = catchAsync(async (req,res,next) =>{
 

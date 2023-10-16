@@ -58,6 +58,9 @@ router.get("/search-suggestion", contentController.searchListSuggestion);
 
 router.get("/update-new-from-Api", contentController.updateNewsFromApi);
 
+router.get("/videos", contentController.getAllVideos);
+
+
 
 
 
