@@ -767,13 +767,15 @@ exports.searchBlogs = catchAsync(async (req, res, next) => {
   if (status !== "all") {
     filter["$and"].push({ isActive: status === "true" ? true : false });
   }
-  const { status: isValidDuration, firstDay, lastDay } = generateDate(duration);
-  if (!isValidDuration) {
-    return next(new AppError("Invalid Duration", 500));
+  if( duration != "all"){
+    const { status: isValidDuration, firstDay, lastDay } = generateDate(duration);
+    if (!isValidDuration) {
+      return next(new AppError("Invalid Duration", 500));
+    }
+    filter["$and"].push(
+      ...[{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }]
+    );
   }
-  filter["$and"].push(
-    ...[{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }]
-  );
   const [data, total] = await Promise.all([
     contentModel
       .find(filter)
@@ -855,13 +857,19 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
 // get all users
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const { duration, status } = req.query;
-  const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
-  if (!isSuccess) {
-    return next(new AppError("Invalid duration", 500));
+
+  let filter = {}
+  if(duration != "all"){
+    const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
+    if (!isSuccess) {
+      return next(new AppError("Invalid duration", 500));
+    }
+    filter = {
+      $and: [{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }],
+    };
   }
-  let filter = {
-    $and: [{ createdAt: { $gte: firstDay } }, { createdAt: { $lt: lastDay } }],
-  };
+
+
   if (status && status !== "all") {
     filter.isActive = status;
   }
@@ -878,15 +886,18 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 // get single user
 exports.getSingleUser = catchAsync(async (req, res, next) => {
   const { _id, duration, query } = req.query;
-  const { status, firstDay, lastDay } = generateDate(duration);
-  if (!status) {
-    return next(new AppError("Invalid duration", 500));
-  }
   const filter = {
     type: "blog",
     author: _id,
-    createdAt: { $gte: firstDay, $lt: lastDay },
   };
+  if(duration != "all"){
+    const { status, firstDay, lastDay } = generateDate(duration);
+    if (!status) {
+      return next(new AppError("Invalid duration", 500));
+    }
+    filter.createdAt = { $gte: firstDay, $lt: lastDay };
+  }
+  
   if (query) {
     filter["$or"] = [
       { title: { $regex: query, $options: "i" } },
@@ -969,16 +980,19 @@ exports.allfeatureRequests = catchAsync(async (req, res, next) => {
 
   const {duration, status } = req.query;
 
-  const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
-  if (!isSuccess) {
-    return next(new AppError("Invalid duration", 500));
+  let filter = {
+    type: "blog",
+    onModel:"User",
+  };
+
+  if( duration != "all"){
+      const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
+      if (!isSuccess) {
+        return next(new AppError("Invalid duration", 500));
+      }
   }
 
-  let filter = {
-      createdAt: { $gte: firstDay , $lt: lastDay },
-      type: "blog",
-      onModel:"User",
-  };
+  filter.createdAt = { $gte: firstDay , $lt: lastDay };
 
   if (status && status !== "all") {
     filter.featureStatus = status;

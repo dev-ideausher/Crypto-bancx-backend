@@ -120,15 +120,15 @@ exports.allVideos = catchAsync(async (req, res, next) => {
       }
       return res.status(200).json({ status: true, data: test });
     }
-    const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
-    if (!isSuccess) {
-      return next(new AppError("Invalid duration", 500));
+    let filter = {type: "video"}
+    if(duration != "all" ){
+      const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
+      if (!isSuccess) {
+        return next(new AppError("Invalid duration", 500));
+      }
+      filter.createdAt = { $gte: firstDay , $lt: lastDay };
     }
-    let filter = {
-        createdAt: { $gte: firstDay , $lt: lastDay },
-        type: "video" ,
-    };
- 
+    
     const videos = await topContentModel.find(filter)
     .populate({
         path: 'contentId',

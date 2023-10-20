@@ -329,9 +329,7 @@ exports.graphOhlc = catchAsync(async (req, res, next) => {
         id = id.toUpperCase() + "-USD"
       }else{
         id =id.toUpperCase() + "-" + currency.toUpperCase();
-      }
-
-      
+      }    
       product_id = id
     }
 

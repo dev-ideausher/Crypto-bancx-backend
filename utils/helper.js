@@ -10,6 +10,7 @@ const videoModel = require("../models/videoModel");
 const AppError = require("./appError");
 const catchAsync = require("./catchAsync");
 const redisClient = require("../config/redis");
+const { deleteUser } = require("firebase/auth");
 
 
 
@@ -201,14 +202,8 @@ const searchNewsOrVideos = (model) => {
       }
       return res.status(200).json({ status: true, blog: blog });
     }
-    const {
-      status: isValidDuration,
-      firstDay,
-      lastDay,
-    } = generateDate(duration);
-    if (!isValidDuration) {
-      return next(new AppError("Invalid Duration", 500));
-    }
+
+
     let filter = {};
     if (userId) {
       filter.author = userId;
@@ -221,10 +216,22 @@ const searchNewsOrVideos = (model) => {
     if (status && status !== "all") {
       filter.isActive = status === "true" ? true : false;
     }
-    filter.createdAt = {
-      $gte: firstDay,
-      $lt: lastDay,
-    };
+
+    if(duration != "all"){
+      const {
+        status: isValidDuration,
+        firstDay,
+        lastDay,
+      } = generateDate(duration);
+      if (!isValidDuration) {
+        return next(new AppError("Invalid Duration", 500));
+      }
+      filter.createdAt = {
+        $gte: firstDay,
+        $lt: lastDay,
+      };
+    }
+    
 
     // uncomment if u need search part
     // if (isDate(query)) {

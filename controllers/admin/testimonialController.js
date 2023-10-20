@@ -142,23 +142,18 @@ exports.allTestimonials = catchAsync(async (req, res, next) => {
     }
     return res.status(200).json({ status: true, data: test });
   }
-  const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
-  if (!isSuccess) {
-    return next(new AppError("Invalid duration", 500));
-  }
-  // let filter = {
-  //   $and: [
-  //     { createdAt: { $gte: firstDay , $lt: lastDay } },
-  //     { type: "testimonial" },
-  //   ],
-  // };
-
   let filter = {
-    createdAt: { $gte: firstDay , $lt: lastDay },
     type: "testimonial"
   };
-  // console.log("status",typeof status)
-
+  
+  if(duration != "all"){
+    const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
+    if (!isSuccess) {
+      return next(new AppError("Invalid duration", 500));
+    }
+    filter.createdAt=  { $gte: firstDay , $lt: lastDay };
+  }
+  
 
   const testimonials = await topContentModel.find(filter).populate("contentId").sort({ priority: -1 });
 
