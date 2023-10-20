@@ -120,7 +120,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
       }
       return res.status(200).json({ status: true, data: test });
     }
-    let filter = {type: "video"}
+    let filter = {isDeleted:{$ne:true}}
     if(duration != "all" ){
       const { status: isSuccess, firstDay, lastDay } = generateDate(duration);
       if (!isSuccess) {
@@ -129,36 +129,28 @@ exports.allVideos = catchAsync(async (req, res, next) => {
       filter.createdAt = { $gte: firstDay , $lt: lastDay };
     }
     
-    const videos = await topContentModel.find(filter)
-    .populate({
-        path: 'contentId',
-        populate: {
-            path: 'author',
-            select:['name', 'email', 'image']
-            }
-        })
-    .sort({ priority: -1 })
-
-    let filteredVideos
-
     if (status && status !== "all") {
       if(status == "true"){
         filter.isActive = true
       }else if(status == "false"){
         filter.isActive = false
       }
-      filteredVideos = videos.filter(video=>{
-        return(video.contentId.isActive ==filter.isActive)
-      })
-    }else if(status == "all"){
-      filteredVideos = videos
     }
-  
+
+    const video = await videoModel
+    .find(filter)
+    .populate ({
+      path: 'author',
+      select:['name', 'email', 'image']
+    })
+    .sort({created_at:-1});
+
+
     return res.status(200).json({
       status: true,
-      result: filteredVideos.length,
+      result: video.length,
       message: "videos found.",
-      allVideos: filteredVideos,
+      allVideos: video,
     });
   });
 

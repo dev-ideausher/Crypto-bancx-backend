@@ -996,6 +996,8 @@ exports.allfeatureRequests = catchAsync(async (req, res, next) => {
 
   if (status && status !== "all") {
     filter.featureStatus = status;
+  }else{
+    filter.featureStatus =  {$in:["request","rejected"]}
   }
 
   let featureRequests = await contentModel.find(filter).populate("author", "name email image").sort({createdAt:-1})
