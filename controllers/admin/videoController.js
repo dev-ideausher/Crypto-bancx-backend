@@ -112,13 +112,12 @@ exports.allVideos = catchAsync(async (req, res, next) => {
    
     const { _id, duration, status } = req.query;
     if (_id) {
-      const test = await topContentModel
-        .findOne({ type: "video", contentId: _id })
-        .populate("contentId");
-      if (!test) {
+      const video = await videoModel
+        .findOne({ _id: _id });
+      if (!video) {
         return next(new AppError("Invalid id", 500));
       }
-      return res.status(200).json({ status: true, data: test });
+      return res.status(200).json({ status: true, data: video });
     }
     let filter = {isDeleted:{$ne:true}}
     if(duration != "all" ){
@@ -137,7 +136,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
       }
     }
 
-    const video = await videoModel
+    const videos = await videoModel
     .find(filter)
     .populate ({
       path: 'author',
@@ -148,9 +147,9 @@ exports.allVideos = catchAsync(async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      result: video.length,
+      result: videos.length,
       message: "videos found.",
-      allVideos: video,
+      allVideos: videos,
     });
   });
 
