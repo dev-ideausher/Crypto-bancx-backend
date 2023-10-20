@@ -990,9 +990,9 @@ exports.allfeatureRequests = catchAsync(async (req, res, next) => {
       if (!isSuccess) {
         return next(new AppError("Invalid duration", 500));
       }
+   filter.createdAt = { $gte: firstDay , $lt: lastDay };
   }
 
-  filter.createdAt = { $gte: firstDay , $lt: lastDay };
 
   if (status && status !== "all") {
     filter.featureStatus = status;
