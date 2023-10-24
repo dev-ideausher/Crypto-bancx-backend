@@ -259,7 +259,26 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
   const { search , currency} = req.query;
 
   const regexQuery ={
-      marketCapId: new RegExp(search, 'i')
+    $or: [
+      {
+        marketCapId: {
+          $regex: search,
+          $options: 'ig',
+        },
+      },
+      {
+        "data.symbol": {
+          $regex: search,
+          $options: 'ig',
+        },
+      },
+      {
+        "data.name": {
+          $regex: search,
+          $options: 'ig',
+        },
+      }
+    ]  
   }
 
   let suggestion = await marketCapModel

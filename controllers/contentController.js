@@ -320,34 +320,33 @@ exports.latestContent = catchAsync(async (req, res, next) => {
   const { page, type, pageSize, contentId } = req.query;
   console.log("he")
   if (contentId) {
-    const dataExists = await redisClient.get(`getByContentId=${contentId}`);
-    if (dataExists) {
+    // const dataExists = await redisClient.get(`getByContentId=${contentId}`);
+    // if (dataExists) {
 
-      const {content,recommended} = JSON.parse(dataExists);
-      console.log(content)
-      console.log(JSON.parse(dataExists))
+    //   const {content,recommended} = JSON.parse(dataExists);
+    //   console.log(content)
+    //   console.log(JSON.parse(dataExists))
 
-      await viewsModel.create({
-        type:content.type,
-        itemId:contentId,
-        onModel:"Content"
-      });
+    //   await viewsModel.create({
+    //     type:content.type,
+    //     itemId:contentId,
+    //     onModel:"Content"
+    //   });
   
-      let contentAfter = await contentModel.findByIdAndUpdate(
-        contentId,
-        {$inc: {ViewCount: 1}},
-        {new: true}
-      );
+    //   let contentAfter = await contentModel.findByIdAndUpdate(
+    //     contentId,
+    //     {$inc: {ViewCount: 1}},
+    //     {new: true}
+    //   );
     
-      console.log("viewCount",contentAfter.ViewCount)
-
-      return res.status(200).json({
-        status: true,
-        message: "Data found",
-        content: content,
-        recommended:recommended,
-      });
-    }
+    //   console.log("viewCount",contentAfter.ViewCount)
+    //   return res.status(200).json({
+    //     status: true,
+    //     message: "Data found",
+    //     content: content,
+    //     recommended:recommended,
+    //   });
+    // }
     const content = await contentModel
       .findById(contentId)
       .populate("tags")
@@ -358,15 +357,21 @@ exports.latestContent = catchAsync(async (req, res, next) => {
     let recommended
     if(content.type=="blog"){
       recommended = await contentModel.find({type:content.type, tags:{$in:tagIds}, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({viewCount:-1}).limit(5);
+      if(recommended.length == 0){
+        recommended = await contentModel.find({type:content.type, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({viewCount:-1}).limit(5); 
+      }
     }else if (content.type=="news"){
       recommended = await contentModel.find({type:content.type,tags:{$in:tagIds}, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({createdAt:-1}).limit(5);
+      if(recommended.length == 0){
+        recommended = await contentModel.find({type:content.type, isActive:true ,isDraft:false, isApproved:true ,isDeleted:{$ne:true}}).sort({createdAt:-1}).limit(5); 
+      }
     }
 
-    await redisClient.SETEX(
-      `getByContentId=${contentId}`,
-      EXPIRY_TIME,
-      JSON.stringify({content: content?._doc, recommended})
-    );
+    // await redisClient.SETEX(
+    //   `getByContentId=${contentId}`,
+    //   EXPIRY_TIME,
+    //   JSON.stringify({content: content?._doc, recommended})
+    // );
     //await redisClient.quit();
 
     await viewsModel.create({
@@ -384,7 +389,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 
     return res
       .status(200)
-      .json({ status: true, message: "Content found", content: content, recommended });
+      .json({ status: true, message: "Content found", content: contentAfter, recommended });
   }
 
   if (page < 1 || pageSize <= 0)
