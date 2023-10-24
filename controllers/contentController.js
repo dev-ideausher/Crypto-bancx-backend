@@ -389,7 +389,7 @@ exports.latestContent = catchAsync(async (req, res, next) => {
 
     return res
       .status(200)
-      .json({ status: true, message: "Content found", content: contentAfter, recommended });
+      .json({ status: true, message: "Content found", content: content, recommended });
   }
 
   if (page < 1 || pageSize <= 0)
