@@ -161,16 +161,32 @@ exports.deleteVideo = catchAsync(async (req, res, next) => {
     const { _id } = req.query;
 
     const deletedVideoTop = await topContentModel.findOne({contentId: _id,type:"video"});
-    if(!deletedVideoTop){
-      return next(new AppError("invalid _id", 500));
+    if(deletedVideoTop){
+
+      const deleteFromTopModel = await topContentModel.deleteOne({
+        contentId: _id,
+      });
+        // Get the priority of the document that is being deleted
+        const deletedPriority = deletedVideoTop.priority;
+       // Update the priorities of the remaining documents
+        const updatePromises = [];
+      
+        // Decrease the values
+        updatePromises.push(
+          topContentModel.updateMany(
+            { type:"video", priority: { $gt: deletedPriority } },
+            { $inc: { priority: -1 } }
+          )
+        );
+        await Promise.all(updatePromises);
+       
     }
     const deletedVideo = await videoModel.findById(_id)
     if(!deletedVideo){
       return next(new AppError("invalid _id", 500));
     };
 
-    // Get the priority of the document that is being deleted
-    const deletedPriority = deletedVideoTop.priority;
+    
   
     // Delete the video
     const deleteVideo = await videoModel.deleteOne({ _id: _id });
@@ -178,24 +194,8 @@ exports.deleteVideo = catchAsync(async (req, res, next) => {
     if (!deleteVideo.acknowledged || deleteVideo.deletedCount !== 1){
         return next(new AppError("Something went wrong", 500));
     }
-  
-    // Update the priorities of the remaining documents
-    const updatePromises = [];
-  
-    // Decrease the values
-    updatePromises.push(
-      topContentModel.updateMany(
-        { type:"video", priority: { $gt: deletedPriority } },
-        { $inc: { priority: -1 } }
-      )
-    );
-  
-    await Promise.all(updatePromises);
-  
+
     // Delete the document from topContentModel
-    const deleteFromTopModel = await topContentModel.deleteOne({
-      contentId: _id,
-    });
 
     (async () => {
       let keysToDelete = 'top-content/video';
