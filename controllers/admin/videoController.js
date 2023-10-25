@@ -142,7 +142,7 @@ exports.allVideos = catchAsync(async (req, res, next) => {
       path: 'author',
       select:['name', 'email', 'image']
     })
-    .sort({created_at:-1});
+    .sort({createdAt:-1});
 
 
     return res.status(200).json({

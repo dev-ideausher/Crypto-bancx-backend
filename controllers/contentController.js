@@ -681,7 +681,7 @@ exports.getAllVideos = catchAsync(async (req, res, next) => {
 
   const video = await videoModel
     .find({isActive:true,isApproved:true,isDeleted:{$ne:true}})
-    .sort({created_at:-1});
+    .sort({createdAt:-1});
   return res.status(200).json({ status: true, message: "", data: video });
 });
 
