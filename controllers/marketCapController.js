@@ -263,19 +263,19 @@ exports.searchListSuggestion = catchAsync(async (req, res, next) => {
       {
         marketCapId: {
           $regex: search,
-          $options: 'ig',
+          $options: 'i',
         },
       },
       {
         "data.symbol": {
           $regex: search,
-          $options: 'ig',
+          $options: 'i',
         },
       },
       {
         "data.name": {
           $regex: search,
-          $options: 'ig',
+          $options: 'i',
         },
       }
     ]  
