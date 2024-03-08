@@ -30,6 +30,7 @@ const videoModel = require("../../models/videoModel");
 const firebase = require("firebase-admin");
 const topContentModel = require("../../models/topContentModel");
 const redisClient = require("../../config/redis");
+const tagModel = require("../../models/tagModel");
 require("../../firebase/firebaseConfig");
 
 // admin register
@@ -1050,4 +1051,19 @@ exports.getSingleFeatureRequest = catchAsync(async (req, res, next) => {
   let featureRequest = await contentModel.findById(id).populate("author", "name email image").populate("tags")
 
   return res.status(200).json({ status: true, featureRequest: featureRequest });
+});
+
+
+exports.tags = catchAsync(async (req, res, next) => {
+
+  let tags = await tagModel.find({}).sort({name:1})
+
+  return res.status(200).json({ status: true, tags: tags });
+});
+
+exports.updatetags = catchAsync(async (req, res, next) => {
+
+  let tag = await tagModel.findByIdAndUpdate(req.body._id,req.body,{new:true})
+
+  return res.status(200).json({ status: true, tag: tag });
 });

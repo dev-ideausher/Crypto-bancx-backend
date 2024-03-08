@@ -244,5 +244,15 @@ router.get(
   adminController.getSingleFeatureRequest
 );
 
+router.get(
+  "/tags/",
+  authController.validateToken(adminModel),
+  adminController.tags
+);
 
+router.post(
+  "/tags/update",
+  authController.validateToken(adminModel),
+  adminController.updatetags
+);
 module.exports = router;

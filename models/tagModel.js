@@ -10,6 +10,10 @@ const schema = new mongoose.Schema(
       required: true,
       // validate: [convertToLowerCase,""]
     },
+    show:{
+      type:Boolean,
+      default:false
+    },
     viewCount: {
       type: Number,
       default: 0,
